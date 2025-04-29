@@ -4,7 +4,7 @@
 
 import { Test } from "../abstract/test";
 import { IBayerModel } from "../../types/bayer";
-import { Bayer } from "../../components/bayerModel";
+import { Bayer } from "../../components/model/bayerModel";
 
 export class BayerTest extends Test {
   protected testData: IBayerModel = {
@@ -48,7 +48,7 @@ export class BayerTest extends Test {
        }
      } catch (e) {
         this.result = {
-          code: -1,
+          code: 0,
           message: e.message,
         }
      }

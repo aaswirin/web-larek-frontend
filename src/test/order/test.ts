@@ -4,7 +4,7 @@
 
 import { Test } from "../abstract/test";
 import { IOrderModel } from "../../types/order";
-import { Order } from "../../components/orderModel";
+import { Order } from "../../components/model/orderModel";
 
 export class OrderTest extends Test {
   protected testData: IOrderModel = {
@@ -56,7 +56,7 @@ export class OrderTest extends Test {
       }
     } catch (e) {
       this.result = {
-        code: -1,
+        code: 0,
         message: e.message,
       }
     }

@@ -4,7 +4,7 @@
 
 import { Test } from "../abstract/test";
 import { IBasketModel } from "../../types/basket";
-import { Basket } from "../../components/basketModel";
+import { Basket } from "../../components/model/basketModel";
 
 export class BasketTest extends Test {
   protected today:Date = new Date();
@@ -52,7 +52,7 @@ export class BasketTest extends Test {
       }
     } catch (e) {
       this.result = {
-        code: -1,
+        code: 0,
         message: e.message,
       }
     }

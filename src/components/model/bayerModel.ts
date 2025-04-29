@@ -2,7 +2,7 @@
  * Модуль описывает модель данных "Покупатель"
  * @module
  */
-import { IBayerModel } from "../types/bayer"
+import { IBayerModel } from "../../types/bayer"
 
 /**
  * Класс для покупателя

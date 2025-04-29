@@ -6,10 +6,18 @@
 export type TCategoryType = 'софт-скил' | 'другое' | 'дополнительное' | 'кнопка' | 'хард-скил';
 
 /**
+ * Тип для id товара
+ *
+ * @type {string} TIdGoodType
+ */
+export type TIdGoodType = string;
+
+
+/**
  * Интерфейс для товара
  *
- * @interface IGoodModel
- *   @property {string} id id товара
+ * @interface IGood
+ *   @property {TIdGoodType} id id товара
  *   @property {string} description описание
  *   @property {string} image URL картинки
  *   @property {string} title наименование
@@ -23,29 +31,8 @@ export type TCategoryType = 'софт-скил' | 'другое' | 'дополн
  *    category: 'софт-скил',
  *    price: 750,}
  */
-export interface IGoodModel {
-  id: string;               // id
-  description: string;      // описание
-  image: string;            // URL картинки
-  title: string;            // наименование
-  category: TCategoryType;  // категория
-  price: number | null;     // цена, может быть null (зачем? для аукциона?)
-}
-
-/**
- * Класс для товара
- *
- * @class Good
- * @implements IGoodModel
- *   @property {string} id id товара
- *   @property {string} description описание
- *   @property {string} image URL картинки
- *   @property {string} title наименование
- *   @property {TCategoryType} category категория
- *   @property {number | null} price цена
- */
-export class Good implements IGoodModel {
-  id: string;               // id
+export interface IGood {
+  id: TIdGoodType;          // id
   description: string;      // описание
   image: string;            // URL картинки
   title: string;            // наименование

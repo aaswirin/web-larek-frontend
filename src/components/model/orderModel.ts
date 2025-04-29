@@ -2,9 +2,8 @@
  * Модуль описывает модель данных "Заказ"
  * @module
  */
-import { IOrderModel, TPaymentType } from "../types/order";
-import { IBayerModel } from "../types/bayer";
-import {IGoodModel} from "../types/good";
+import { IOrderModel, TPaymentType } from "../../types/order";
+import { IBayerModel } from "../../types/bayer";
 
 /**
  * Класс для заказа

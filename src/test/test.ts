@@ -2,17 +2,17 @@
  * Модуль для запуска всех тестов
  */
 import { BayerTest } from "./bayer/test";
-import { GoodTest } from "./good/test";
+import { GoodTest } from "./goods/test";
 import { OrderTest } from "./order/test";
-import {BasketTest} from "./basket/test";
+import { BasketTest } from "./basket/test";
+import { APITest } from "./api/test";
 
 /**
  * Запуск всех тестов
  *
  * @function startTests
- *   @return {boolean} результаты тестов
  */
-export function startTests(): boolean {
+export function startTests() {
   console.log('Старт тестов');
 
   // 1. Покупатель
@@ -22,8 +22,8 @@ export function startTests(): boolean {
   test1.consoleResult();
 
   // 2. Товар
-  console.log('Тест модели "Товар"');
-  const test2: GoodTest = new GoodTest('Модель "Товар"');
+  console.log('Тест модели "Товары"');
+  const test2: GoodTest = new GoodTest('Модель "Товары"');
   test2.test();
   test2.consoleResult();
 
@@ -39,7 +39,13 @@ export function startTests(): boolean {
   test4.test();
   test4.consoleResult();
 
-  console.log('Окончание тестов');
+  // 5. API
+  console.log('Тест "API"');
+  const test5: APITest = new APITest('API')
+  test5.test();
+  //test5.consoleResult();
+
+  //console.log('Окончание тестов');
 
   return true;
 }

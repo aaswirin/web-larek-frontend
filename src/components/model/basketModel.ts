@@ -2,8 +2,8 @@
  * Модуль описывает модель данных "Корзина"
  * @module
  */
-import { IBasketModel } from "../types/basket";
-import { isEmpty } from "../utils/utils";
+import { IBasketModel } from "../../types/basket";
+import { isEmpty } from "../../utils/utils";
 
 /**
  * Класс для корзины
