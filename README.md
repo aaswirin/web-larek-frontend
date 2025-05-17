@@ -6,6 +6,12 @@
 - src/ — исходные файлы проекта
 - src/components/ — папка с JS компонентами
 - src/components/base/ — папка с базовым кодом
+- src/components/api/ — папка с классом для API
+- src/components/model/ — папка с классами для модели данных
+- src/components/storage/ — папка с классом для локального хранилища
+- src/components/view/ — папка с классами слоя отображения
+- src/test/ — папка с тестами
+- src/types/ — папка с типами и интерфейсами\
 
 Важные файлы:
 - src/pages/index.html — HTML-файл главной страницы
@@ -42,334 +48,357 @@ yarn build
 ```
 ## Архитектура приложения
 Приложение разделено на слои, согласно шаблону MVP:
-- слой данных - преобразование и хранение данных приложения;
-- слой отображение - размещение и отображение данных на странице;
-- презентер - связь отображения и данных
+- слой данных - преобразование и хранение данных приложения,\
+при изменении данных, слой сообщает через презентер слою отображения об изменении;
+- слой отображение - размещение и отображение данных на странице,\
+при действиях пользователя через презентер сообщает слою данных об необходимости изменения данных;
+- презентер - связь отображения и данных, посредник между слоем данных и слоем отображения.\
+
+Также в приложении есть дополнительные подсистемы:
+- подсистема тестов для проверки приложения после изменения типов, интерфейсов или классов;
+- подсистема локального хранилища для хранения корзины и параметров заказа между сеансами работы пользователя.
 ### Базовые классы
 ### Api
-Класс реализует базовые методы запросов к серверу
+Класс реализует базовые методы запросов к серверу.
 #### Класс содержит:
-- метод<code>get(uri: string)</code> - отправка запроса "GET"
-- метод<code>post(uri: string, data: object, method: ApiPostMethods = 'POST')</code> - отправка данных методом "POST"
+- метод`get(uri: string)` - отправка запроса "GET"
+- метод`post(uri: string, data: object, method: ApiPostMethods = 'POST')` - отправка данных методом "POST"
 ### EventEmitter
 Класс реализует отправку и получение событий в приложении
 #### Класс содержит:
-- метод<code>on<T extends object>(eventName: EventName, callback: (event: T) => void)</code> - устанавливает обработчик на событие
-- метод<code>emit<T extends object>(eventName: string, data?: T)</code> - инициировать событие с данными
+- метод`on<T extends object>(eventName: EventName, callback: (event: T) => void)` - устанавливает обработчик на событие
+- метод`emit<T extends object>(eventName: string, data?: T)` - инициировать событие с данными
 ## Описание данных
 ### Описание сообщений между слоями приложения
-- <code>goods:all:change</code> - событие "Изменён весь список товаров"
-- <code>card:showDetail</code> - событие "Показать товар детально"
-- <code>basket:change</code> - событие "Добавить/Удалить товар в корзине"
-- <code>page:showBasket</code> - событие "Показать корзину"
-- <code>order:make</code> - событие "Сделать заказ"
-- <code>order:change</code> - событие "Изменился заказ"
+- `goods:all:change` - событие "Изменён список товаров"
+- `card:showDetail` - событие "Показать товар детально"
+- `basket:change` - событие "Добавить/Удалить" товар в корзине
+- `page:showBasket` - событие "Показать корзину"
+- `order:make` - событие "Сделать заказ"
+- `order:change` - событие "Изменился заказ"
 ### Слой "Модель данных":
 ### Типы:
 ### TCategoryType
 Описывает тип категории товара
+```
+type TCategoryType = 'софт-скил' | 'другое' | 'дополнительное' | 'кнопка' | 'хард-скил';
+```
 ### TIdGoodType
-Описывает тип ID товара
+Описывает тип ID товара, сейчас `string`, но может измениться при смене API
+```
+type TIdGoodType = string;
+```
 ### TPaymentType
-Описывает тип оплаты заказа
-
+Описывает тип оплаты заказа.
+- `offline` - оплата при получении, в терминах приложения 'При получении'.
+- `online` - оплата на сайте, в терминах приложения 'Онлайн'.
+```
+type TPaymentType = 'offline' | 'online';
+```
 ### Интерфейсы
 ### IGoodModel
 Описывает интерфейс товара
 #### Интерфейс содержит:
-- <code>id: TIdGoodType</code> - id товара
-- <code>description: string</code> - описание
-- <code>image: string</code> - URL картинки
-- <code>title: string</code> - наименование
-- <code>category: TCategoryType</code> - категория
-- <code>price: number | null</code> - цена
-- <code>number?:  number;</code> - порядковый номер
+- `id: TIdGoodType` - id товара
+- `description: string` - описание
+- `image: string` - URL картинки
+- `title: string` - наименование
+- `category: TCategoryType` - категория
+- `price: number | null` - цена
+- `number?:  number;` - порядковый номер
 ### IBasketModel
 Описывает интерфейс корзины
 #### Интерфейс содержит:
-- <code>startDate: Date</code> - дата и время начала формирования корзины
-- <code>goods: Set<TIdGoodType></code> - список id'ов товаров в корзине
+- `startDate: Date` - дата и время начала формирования корзины
+- `goods: Set<TIdGoodType>` - список id'ов товаров в корзине
 ### IOrderModel
 Описывает интерфейс заказа
 #### Интерфейс содержит:
-- <code>payment: TPaymentType</code> - тип оплаты
-- <code>total: number</code> - сумма заказа
-- <code>goods: TIdGoodType[]</code> - список id'ов заказанных товаров
-- <code>email: string</code> - электронная почта
-- <code>phone: string</code> - телефон
-- <code>address: string</code> - адрес доставки
+- `payment: TPaymentType` - тип оплаты
+- `total: number` - сумма заказа
+- `goods: TIdGoodType[]` - список id'ов заказанных товаров
+- `email: string` - электронная почта
+- `phone: string` - телефон
+- `address: string` - адрес доставки
 ### Классы
 ### GoodsModel
-Класс реализует хранение списка товаров
+Класс реализует хранение списка товаров. При изменении товара генерирует сообщения:
+- `goods:all:change` - событие "Изменён список товаров"
 #### Класс содержит:
-- свойство <code>events: IEvents</code> - брокер событий
-- свойство <code>goods: Map<TIdGoodType, IGood></code> - список товаров
-- конструктор <code>constructor(protected events: IEvents, data: IGoodModel[] | null)</code>
-- метод <code>getGoods(): IGoodModel[]</code> - получить список товаров
-- метод <code>setGoods(data: IGoodModel[]): void</code> - установить список товаров
-- метод <code>getGood(id: TIdGoodType): IGoodModel</code> - получить товар по id
+- свойство `events: IEvents` - брокер событий
+- свойство `goods: Map<TIdGoodType, IGood>` - список товаров
+- конструктор `constructor(protected events: IEvents, data: IGoodModel[] | null)`
+- метод `getGoods(): IGoodModel[]` - получить список товаров
+- метод `setGoods(data: IGoodModel[]): void` - установить список товаров
+- метод `getGood(id: TIdGoodType): IGoodModel` - получить товар по id
 ### BasketModel
-Класс реализует хранение корзины
+Класс реализует хранение корзины. При изменении состава корзины генерирует сообщения:
+- `basket:change` - событие "Добавить/Удалить" товар в корзине
 #### Класс содержит:
-- свойство <code>events: IEvents</code> - брокер событий
-- свойство <code>startDate: Date</code> - дата и время начала формирования корзины
-- свойство <code>goods: Set<TIdGoodType></code> - список id'ов товаров в корзине
-- конструктор <code>constructor(events: IEvents, data: IBasketModel)</code>
-- метод <code>start(): void</code> - установка времени и даты начала формирования корзины
-- метод <code>clear(): void</code> - очистка корзины
-- метод <code>setGoods(data: TIdGoodType[]): void : void</code> - загрузить список товаров в корзину
-- метод <code>addGood(data: Partial<IGoodModel>): void</code> - добавить товар в корзину
-- метод <code>deleteGood(data: Partial<IGoodModel>): void</code> - удалить товар из корзины
-- метод <code>getCount(): number</code> - получить количество товаров в корзине
-- метод <code>isBasket(data: Partial<IGoodModel>): boolean</code> - проверить наличие товара в корзине
--
+- свойство `events: IEvents` - брокер событий
+- свойство `startDate: Date` - дата и время начала формирования корзины
+- свойство `goods: Set<TIdGoodType>` - список id'ов товаров в корзине
+- конструктор `constructor(events: IEvents, data: IBasketModel)`
+- метод `start(): void` - установка времени и даты начала формирования корзины
+- метод `clear(): void` - очистка корзины
+- метод `setGoods(data: TIdGoodType[]): void : void` - загрузить список товаров в корзину
+- метод `addGood(data: Partial<IGoodModel>): void` - добавить товар в корзину
+- метод `deleteGood(data: Partial<IGoodModel>): void` - удалить товар из корзины
+- метод `getCount(): number` - получить количество товаров в корзине
+- метод `isBasket(data: Partial<IGoodModel>): boolean` - проверить наличие товара в корзине
+- метод `calcTotal(): number` - рассчитать стоимость корзины
 ### OrderModel
-Класс реализует хранение заказа
+Класс реализует хранение заказа.
 #### Класс содержит:
-- свойство <code>events: IEvents</code> - брокер событий
-- свойство <code>payment: TPaymentType</code> - тип оплаты
-- свойство <code>total: number</code> - сумма заказа
-- свойство <code>goods: TIdGoodType[]</code> - id заказанных товаров
-- свойство <code>email: string</code> - электронная почта
-- свойство <code>phone: string</code> - телефон
-- свойство <code>address: string</code> - адрес
-- конструктор <code>constructor(protected events: IEvents, data: Partial<IOrderModel>)</code>
-- метод <code>getOrder(): IOrderModel</code> - получить заказ
-- метод <code>setOrder(data: Partial<IOrderModel>): void</code> - записать заказ
-- метод <code>getGoods(): TIdGoodType[]</code> - получить список товаров из заказа
-- метод <code>setGoods(data: TIdGoodType[]): void</code> - установить список товаров
+- свойство `events: IEvents` - брокер событий
+- свойство `payment: TPaymentType` - тип оплаты
+- свойство `total: number` - сумма заказа
+- свойство `goods: TIdGoodType[]` - id заказанных товаров
+- свойство `email: string` - электронная почта
+- свойство `phone: string` - телефон
+- свойство `address: string` - адрес
+- конструктор `constructor(protected events: IEvents, data: Partial<IOrderModel>)`
+- метод `getOrder(): IOrderModel` - получить заказ
+- метод `setOrder(data: Partial<IOrderModel>): void` - записать заказ
+- метод `getGoods(): TIdGoodType[]` - получить список товаров из заказа
+- метод `setGoods(data: TIdGoodType[]): void` - установить список товаров
 ### Слой "API"
 ### Интерфейсы
 ### IGoodApi
 Описывает товары, полученные из API
 #### Интерфейс содержит:
-- <code>total: number</code> - количество товаров
-- <code>items: IGoodModel[]</code> - список товаров
+- `total: number` - количество товаров
+- `items: IGoodModel[]` - список товаров
 ### IOrderApi
 Описывает заказ, отправляемый в API
 #### Интерфейс содержит:
-- <code>payment: TPaymentType</code> - тип оплаты
-- <code>email: string</code> - электронная почта
-- <code>phone: string</code> - телефон
-- <code>address: string</code> - адрес доставки
-- <code>total: number</code> - сумма заказа
-- <code>items: TIdGoodType[]</code> - список товаров
+- `payment: TPaymentType` - тип оплаты
+- `email: string` - электронная почта
+- `phone: string` - телефон
+- `address: string` - адрес доставки
+- `total: number` - сумма заказа
+- `items: TIdGoodType[]` - список товаров
 ### IAnswerOrderApi
 Описывает ответ, после отправки заказа в API
 #### Интерфейс содержит:
-- <code>id: string</code> - id заказа
-- <code>total: number</code> - сумма списано
-- <code>error: string</code> - текст ошибки
+- `id: string` - id заказа
+- `total: number` - сумма списано
+- `error: string` - текст ошибки, если отправка заказа закончилась неудачей
 ### Классы
 ### LarekAPI
-Класс реализует хранение заказа
+Класс наследуется от базового класса Api.\
+Реализует методы для получения номенклатуры товаров и отправки заказа.
 #### Класс содержит:
-- метод <code>getGoods(): Promise<IGoodApi></code> - получить товары с сервера
-- метод <code>sendOrder(order: IOrderApi): Promise<IAnswerOrderApi></code> - отправить товары на сервер
-### Слой "Хранилище"
-### Классы
-### LarekStorage
-Класс реализует сохранение и восстановление данных приложения в локальное хранилище.
-В локально хранилище сохраняются состав корзины и параметры заказа (без списка товаров заказа)
-#### Класс содержит:
-- свойство <code>keyBasket: string</code> - ключ данных для хранения корзины
-- свойство <code>keyOrder: string</code> - ключ данных для хранения параметров заказа
-- метод <code>loadBasket(): IBasketModel | null</code> - читает из локального хранилища состав корзины
-- метод <code>saveBasket(basket: object)</code> - пишет в локальное хранилище состав корзины
-- метод <code>loadOrder(): Partial<IOrderModel> | null</code> - читает из локального хранилища данные заказа
-- метод <code>saveOrder(order: object)</code> - пишет в локальное хранилище состав данные заказа
+- метод `getGoods(): Promise<IGoodApi>` - получить товары с сервера
+- метод `sendOrder(order: IOrderApi): Promise<IAnswerOrderApi>` - отправить товары на сервер
 ### Слой "Отображение"
 ### Типы:
-### TCardGoodOwner
-Описывает тип владельца карты товара <code>'catalog' | 'detail' | 'basket'</code>
 ### TCardGoodStatus
-Описывает состояние товара <code>'basket' | 'free' | 'no_price'</code>
+Описывает состояние товара:
+- `basket` - товар уже в корзине
+- `free` - товара ещё нет в корзине
+- `no_price` - у товара нет цены, добавить в корзину нельзя!
+```
+type TCardGoodStatus = 'basket' | 'free' | 'no_price';
+```
 ### Интерфейсы
 ### ICardGoodView
 Описывает карту товара для отображения
 #### Интерфейс содержит:
-- <code>number: number</code> - номер товара в корзине
-- <code>category: string</code> - категория товара
-- <code>title: string</code> - наименование товара
-- <code>image: string</code> - изображение товара
-- <code>price: number | null</code> - цена товара
-- <code>id: TIdGoodType</code> - id товара
-- <code>buttonText: string</code> - надпись на кнопке
+- `number: number` - номер товара в корзине
+- `category: string` - категория товара
+- `title: string` - наименование товара
+- `image: string` - изображение товара
+- `price: number | null` - цена товара
+- `id: TIdGoodType` - id товара
+- `buttonText: string` - надпись на кнопке
 ### IBasketView
-Описывает карту товара для отображения
+Описывает корзину для отображения
 #### Интерфейс содержит:
-- <code>basketList: HTMLElement[]</code> - список товаров корзины
-- <code>totalSum: string</code> - сумма товаров корзины
-### iIOrderView
+- `basketList: HTMLElement[]` - список товаров корзины
+- `totalSum: string` - сумма товаров корзины
+### IOrderView
 Описывает заказ для отображения
 #### Интерфейс содержит:
-- <code>payment: TPaymentType</code> - тип оплаты
-- <code>address: string</code> - адрес доставки
-- <code>email: string</code> - электронная почта
-- <code>phone: string</code> - телефон
-- <code>total: number</code> - сумма списано
-- <code>goods: TPaymentType[]</code> - список товаров в заказе
+- `payment: TPaymentType` - тип оплаты
+- `address: string` - адрес доставки
+- `email: string` - электронная почта
+- `phone: string` - телефон
+- `total: number` - сумма списано
+- `goods: TPaymentType[]` - список товаров в заказе
 ### IPage
 Описывает страницу отображения
 #### Интерфейс содержит:
-- <code>goodsList: HTMLElement[]</code> - список элементов карт товара на странице
-- <code>basketCount: number</code> - количество товаров в корзине
+- `goodsList: HTMLElement[]` - список элементов карт товара на странице
+- `basketCount: number` - количество товаров в корзине
 ### IWebLarek
 Описывает приложение
 #### Интерфейс содержит:
-- <code>api: LarekAPI</code> - объект, обслуживающий API
-- <code>storage: LarekStorage</code> - объект, обслуживающий локальное хранилище
-- <code>goodsModel: GoodsModel</code> - объект, обслуживающий модель данных "Товары"
-- <code>basketModel: BasketModel</code> - объект, обслуживающий модель данных "Корзина"
-- <code>orderModel: OrderModel</code> - объект, обслуживающий модель данных "Заказ"
-- <code>page: Page</code> - объект, обслуживающий представление "Страница"
-- <code>basket: Basket</code> - объект, обслуживающий представление "Корзина"
-- <code>order: Order</code> - объект, обслуживающий представление "Корзина"
+- `api: LarekAPI` - объект, обслуживающий API
+- `storage: LarekStorage` - объект, обслуживающий локальное хранилище
+- `goodsModel: GoodsModel` - объект, обслуживающий модель данных "Товары"
+- `basketModel: BasketModel` - объект, обслуживающий модель данных "Корзина"
+- `orderModel: OrderModel` - объект, обслуживающий модель данных "Заказ"
+- `page: Page` - объект, обслуживающий представление "Страница"
+- `basket: Basket` - объект, обслуживающий представление "Корзина"
+- `order: Order` - объект, обслуживающий представление "Корзина"
 ### Классы
+### Modal
+Базовый класс для показа модальных окон
+#### Класс содержит:
+- свойство `closeButton: HTMLButtonElement` - элемент кнопки для закрытия окна
+- свойство `content: HTMLElement` - содержимое модального окна
 ### CardGoodView
 Класс для отображения карты товара в каталоге, детальном просмотре и корзине
 #### Класс содержит:
-- свойство <code>events: IEvents</code> - брокер событий
-- свойство <code>owner: TCardGoodOwner</code> - владелец карты товара
-- свойство <code>status?: TCardGoodStatus</code> - статус товара
-- свойство <code>number: number</code> - номер товара в корзине
-- свойство <code>category: TCategoryType</code> - категория товара
-- свойство <code>title: string</code> - наименование товара
-- свойство <code>image: string</code> - изображение товара
-- свойство <code>price: number | null</code> - цена товара
-- свойство <code>id: TIdGoodType</code> - id товара
-- свойство <code>buttonText: string</code> - надпись на кнопке, если товар в детальном просмотре
-- свойство <code>templateCatalog: HTMLTemplateElement</code> - заготовка из вёрстки для товара в каталоге
-- свойство <code>templateDetails: HTMLTemplateElement</code> - заготовка из вёрстки для товара в детальном просмотре
-- свойство <code>templateBasket: HTMLTemplateElement</code> - заготовка из вёрстки для товара в корзине
-- свойство <code>elementNumber: HTMLElement</code> - элемент вёрстки для вывода номера
-- свойство <code>elementCategory: HTMLElement</code> - элемент вёрстки для вывода категории
-- свойство <code>elementTitle: HTMLElement</code> - элемент вёрстки для вывода заголовка
-- свойство <code>elementImage: HTMLImageElement</code> - элемент вёрстки для вывода изображения
-- свойство <code>elementPrice: HTMLElement</code> - элемент вёрстки для вывода цены
-- свойство <code>basketButton: HTMLButtonElement</code> - кнопка "В корзину", если карта товара в детальном просмотре
-- свойство <code>HTMLButtonElement: HTMLButtonElement</code> - кнопка "Удалить", если карта товара в корзине
-- конструктор <code>constructor(container: HTMLTemplateElement, protected events: EventEmitter,protected owner: TCardGoodOwner, protected status?: TCardGoodStatus)</code>
+- свойство `buttonText: string` - надпись на кнопке, если товар в детальном просмотре
+- свойство `templateCatalog: HTMLTemplateElement` - заготовка из вёрстки для товара в каталоге
+- свойство `templateDetails: HTMLTemplateElement` - заготовка из вёрстки для товара в детальном просмотре
+- свойство `templateBasket: HTMLTemplateElement` - заготовка из вёрстки для товара в корзине
+- свойство `elementNumber: HTMLElement` - элемент вёрстки для вывода номера
+- свойство `elementCategory: HTMLElement` - элемент вёрстки для вывода категории
+- свойство `elementTitle: HTMLElement` - элемент вёрстки для вывода заголовка
+- свойство `elementImage: HTMLImageElement` - элемент вёрстки для вывода изображения
+- свойство `elementPrice: HTMLElement` - элемент вёрстки для вывода цены
+- свойство `basketButton: HTMLButtonElement` - кнопка "В корзину", если карта товара в детальном просмотре
+- свойство `HTMLButtonElement: HTMLButtonElement` - кнопка "Удалить", если карта товара в корзине
+- конструктор `constructor(container: HTMLTemplateElement, protected events: EventEmitter,protected owner: TCardGoodOwner, protected status?: TCardGoodStatus)`
 ### BasketView
 Класс для отображения корзины
 #### Класс содержит:
-- свойство <code>events: IEvents</code> - брокер событий
-- свойство <code>template: HTMLTemplateElement</code> - заготовка из вёрстки окна корзины
-- свойство <code>galleryCards: HTMLElement</code> - элемент вёрстки списка корзины
-- свойство <code>basketSum: HTMLElement</code> - элемент вёрстки суммы корзины
-- свойство <code>basketList: HTMLElement</code> - список товаров корзины
-- свойство <code>totalSum: HTMLElement</code> - сумма товаров корзины
-- конструктор <code>constructor(container: HTMLElement, protected events: EventEmitter)</code>
-### OrderView
-Класс для отображения заказа
+- свойство `events: IEvents` - брокер событий
+- свойство `template: HTMLTemplateElement` - заготовка из вёрстки окна корзины
+- свойство `galleryCards: HTMLElement` - элемент вёрстки списка корзины
+- свойство `basketSum: HTMLElement` - элемент вёрстки суммы корзины
+- свойство `basketList: HTMLElement` - список товаров корзины
+- свойство `totalSum: HTMLElement` - сумма товаров корзины
+- конструктор `constructor(container: HTMLElement, protected events: EventEmitter)`
+### OrderViewOrder
+Класс для отображения параметров заказа. Первая страница оформления заказа
 #### Класс содержит:
-- свойство <code>events: IEvents</code> - брокер событий
-- свойство <code>showPage: 'order' | 'contacts' | 'success'</code> - тип данных в окне
-- свойство <code>templatePageOrder:HTMLTemplateElement</code> - заготовка из вёрстки первой страницы заказа
-- свойство <code>buttonCard: HTMLButtonElement</code> - элемент вёрстки кнопка "Онлайн"
-- свойство <code>buttonCash: HTMLButtonElement</code> - элемент вёрстки кнопка "При получении"
-- свойство <code>inputAddress: HTMLInputElement</code> - элемент вёрстки поле ввода "Адрес"
-- свойство <code>buttonOrder: HTMLButtonElement</code> - элемент вёрстки кнопка "Далее"
-- свойство <code>templatePageContacts</code> - заготовка из вёрстки второй страницы заказа
-- свойство <code>inputEMail: HTMLInputElement</code> - элемент вёрстки поле ввода "Почта"
-- свойство <code>inputPhone: HTMLInputElement</code> - элемент вёрстки поле ввода "Телефон"
-- свойство <code>buttonContacts: HTMLButtonElement</code> - элемент вёрстки кнопка "Оплатить"
-- свойство <code>templatePageSuccess</code> - заготовка из вёрстки третьей страницы заказа
-- свойство <code>buttonSuccess: HTMLButtonElement</code> - элемент вёрстки кнопка "За новыми покупками!"
-- свойство <code>elementTotal: HTMLParagraphElement</code> - элемент вёрстки для вывода суммы
-- свойство <code>content: HTMLElement</code> - контент для вывода в страницу заказа
-- свойство <code>payment: TPaymentType</code> - тип оплаты
-- свойство <code>total: number</code> - сумма списано
-- свойство <code>email: string</code> - электронная почта
-- свойство <code>phone: string</code> - телефон
-- свойство <code>address: string</code> - адрес
-- конструктор <code>constructor(container: HTMLElement, protected events: EventEmitter)</code>
+- свойство `events: IEvents` - брокер событий
+- свойство `templatePageOrder:HTMLTemplateElement` - заготовка из вёрстки первой страницы заказа
+- свойство `buttonCard: HTMLButtonElement` - элемент вёрстки кнопка "Онлайн"
+- свойство `buttonCash: HTMLButtonElement` - элемент вёрстки кнопка "При получении"
+- свойство `inputAddress: HTMLInputElement` - элемент вёрстки поле ввода "Адрес"
+- свойство `buttonOrder: HTMLButtonElement` - элемент вёрстки кнопка "Далее"
+- метод `validate(value: string): boolean` - валидация данных формы
+- конструктор `constructor(container: HTMLElement, protected events: EventEmitter)`
+### OrderViewContacts
+Класс для отображения параметров доставки. Вторая страница отображения заказа
+#### Класс содержит:
+- свойство `events: IEvents` - брокер событий
+- свойство `templatePageContacts` - заготовка из вёрстки второй страницы заказа
+- свойство `inputEMail: HTMLInputElement` - элемент вёрстки поле ввода "Почта"
+- свойство `inputPhone: HTMLInputElement` - элемент вёрстки поле ввода "Телефон"
+- свойство `buttonContacts: HTMLButtonElement` - элемент вёрстки кнопка "Оплатить"
+- свойство `templatePageSuccess` - заготовка из вёрстки третьей страницы заказа
+- свойство `buttonSuccess: HTMLButtonElement` - элемент вёрстки кнопка "За новыми покупками!"
+- метод `validate(value: string): boolean` - валидация данных формы
+- конструктор `constructor(container: HTMLElement, protected events: EventEmitter)`
+### OrderViewResult
+Класс для отображения успешного оформления заказа или невозможности отправки (например, сетевая ошибка или что то ещё...)
+#### Класс содержит:
+- свойство `events: IEvents` - брокер событий
+- свойство `content: HTMLElement` - контент для вывода в страницу заказа
+- конструктор `constructor(container: HTMLElement, protected events: EventEmitter)`
 ### Page
 Класс для отображения страницы приложения
 #### Класс содержит:
-- свойство <code>events: IEvents</code> - брокер событий
-- свойство <code>galleryCards: HTMLElement</code> - элемент вёрстки для размещения карт
-- свойство <code>elementBasketCount: HTMLElement</code> - элемент вёрстки количество в корзине
-- свойство <code>constructor(container: HTMLElement,  protected events: EventEmitter)</code>
+- свойство `events: IEvents` - брокер событий
+- свойство `galleryCards: HTMLElement` - элемент вёрстки для размещения карт
+- свойство `elementBasketCount: HTMLElement` - элемент вёрстки количество в корзине
+- свойство `constructor(container: HTMLElement,  protected events: EventEmitter)`
 ### WebLarek
 Класс для управления приложением Web-larёk
 #### Класс содержит:
-- свойство <code>events: IEvents</code> - брокер событий
-- свойство <code>windowModal: HTMLElement</code> - элемент вёрстки модального окна
-- свойство <code>contentModal: HTMLElement</code> - содержимое модального
-- свойство <code>displayedModal: boolean</code> - признак показа модального окна
-- свойство <code>api: LarekAPI</code> - объект, обслуживающий API
-- свойство <code>storage: LarekStorage</code> - объект, обслуживающий локальное хранилище
-- свойство <code>goodsModel: GoodsModel</code> - объект, обслуживающий модель данных "Товары"
-- свойство <code>basketModel: BasketModel</code> - объект, обслуживающий модель данных "Корзина"
-- свойство <code>orderModel: OrderModel</code> - объект, обслуживающий модель данных "Заказ"
-- свойство <code>page: Page</code> - объект, обслуживающий представление "Страница"
-- свойство <code>basket: Basket</code> - объект, обслуживающий представление "Корзина"
-- свойство <code>order: Order</code> - объект, обслуживающий представление "Заказ"
-- конструктор <code>constructor(components: Partial<IWebLarek>)</code>
-- метод <code>initialize(): void</code> - инициализация и запуск приложения
-- метод <code>showModal(): void</code> - открыть модальное окно
-- метод <code>closeModal(): void</code> -  закрыть модальное окно
-- метод <code>showCardDetails(good: IGoodModel, isBasket: boolean): void</code> - показать детальную информацию о товаре
-- метод <code>rebuildBasket(): void</code> - перестроить корзину
-- метод <code>showBasket():void</code> - показать корзину
-- метод <code>showOrder():void</code> - показать заказ
-### Слой "Тесты"
+- свойство `events: IEvents` - брокер событий
+- свойство `windowModal: HTMLElement` - элемент вёрстки модального окна
+- свойство `contentModal: HTMLElement` - содержимое модального
+- свойство `displayedModal: boolean` - признак показа модального окна
+- свойство `api: LarekAPI` - объект, обслуживающий API
+- свойство `storage: LarekStorage` - объект, обслуживающий локальное хранилище
+- свойство `goodsModel: GoodsModel` - объект, обслуживающий модель данных "Товары"
+- свойство `basketModel: BasketModel` - объект, обслуживающий модель данных "Корзина"
+- свойство `orderModel: OrderModel` - объект, обслуживающий модель данных "Заказ"
+- свойство `page: Page` - объект, обслуживающий представление "Страница"
+- свойство `basket: Basket` - объект, обслуживающий представление "Корзина"
+- свойство `order: Order` - объект, обслуживающий представление "Заказ"
+- конструктор `constructor(components: Partial<IWebLarek>)`
+- метод `initialize(): void` - инициализация и запуск приложения
+- метод `showModal(): void` - открыть модальное окно
+- метод `closeModal(): void` - закрыть модальное окно
+- метод `showCardDetails(good: IGoodModel, isBasket: boolean): void` - показать детальную информацию о товаре
+- метод `rebuildBasket(): void` - перестроить корзину
+- метод `showBasket():void` - показать корзину
+- метод `showOrder():void` - показать заказ
+### Подсистема "Хранилище"
+### Классы
+### LarekStorage
+Класс реализует сохранение и восстановление данных приложения в локальное хранилище между сеансами пользователя.\
+В локальное хранилище сохраняются состав корзины и параметры заказа (без списка товаров заказа).
+#### Класс содержит:
+- свойство `keyBasket: string` - ключ данных для хранения корзины
+- свойство `keyOrder: string` - ключ данных для хранения параметров заказа
+- метод `loadBasket(): IBasketModel | null` - читает из локального хранилища состав корзины
+- метод `saveBasket(basket: object)` - пишет в локальное хранилище состав корзины
+- метод `loadOrder(): Partial<IOrderModel> | null` - читает из локального хранилища данные заказа
+- метод `saveOrder(order: object)` - пишет в локальное хранилище состав данные заказа
+### Подсистема "Тесты"
 ### Интерфейсы
 ### IResult
 Описывает результат тестов
 #### Интерфейс содержит:
-- <code>code: number | null</code> - код результата
-- <code>message: string</code> - текст результата
+- `code: number | null` - код результата
+- `message: string` - текст результата
 ### Классы
 ### Test
 Абстрактный класс, родитель для всех тестов
 #### Класс содержит:
-- свойство <code>name: string</code> - название теста
-- свойство <code>result: IResult</code> - результат теста
-- свойство <code>testData: Object</code> - тестовые данные
-- конструктор <code>constructor(name: string)</code>
-- метод <code>test():void</code> - cобственно тест, реализуется в потомках
-- метод <code>getResult(): IResult</code> - возвращает результаты теста
-- метод <code>consoleResult()</code> - вывести результат теста в консоль
-- метод <code>compareResult(resultData: Object): boolean</code> - сравнить два объекта, тестовый и результат
-  // 1. Товар
+- свойство `name: string` - название теста
+- свойство `result: IResult` - результат теста
+- свойство `testData: Object` - тестовые данные
+- конструктор `constructor(name: string)`
+- метод `test():void` - собственно тест, реализуется в потомках
+- метод `getResult(): IResult` - возвращает результаты теста
+- метод `consoleResult()` - вывести результат теста в консоль
+- метод `compareResult(resultData: Object): boolean` - сравнить два объекта, тестовый и результат
 ### GoodTest
 Тест модели данных "Товары"
 #### Класс содержит:
-- свойство <code>testData: IGoodModel[]</code> - тестовые данные
-- метод <code>test()</code> - тест на создание, запись и чтение
+- свойство `testData: IGoodModel[]` - тестовые данные
+- метод `test()` - тест на создание, запись и чтение
 ### OrderTest
 Тест модели данных "Заказ"
 #### Класс содержит:
-- свойство <code>testData: IOrderModel</code> - тестовые данные
-- метод <code>test()</code> - тест на создание, запись и чтение
+- свойство `testData: IOrderModel` - тестовые данные
+- метод `test()` - тест на создание, запись и чтение
 ### BasketTest
 Тест модели данных "Корзина"
 #### Класс содержит:
-- свойство <code>testData: IBasketModel</code> - тестовые данные
-- метод <code>test()</code> - тест на создание, запись и чтение
+- свойство `testData: IBasketModel` - тестовые данные
+- метод `test()` - тест на создание, запись и чтение
 ### GoodViewTest
-Тест отображения "Tовар".
+Тест отображения "Товар".
 #### Класс содержит:
-- свойство <code>testData: IGoodModel[]</code> - тестовые данные
-- метод <code>test()</code> - тест на создание
+- свойство `testData: IGoodModel[]` - тестовые данные
+- метод `test()` - тест на создание
 ### PageViewTest
 Тест отображения "Страница".
 #### Класс содержит:
-- свойство <code>testData: IGoodModel[]</code> - тестовые данные
-- метод <code>test()</code> - тест на создание и вывод на страницу
+- свойство `testData: IGoodModel[]` - тестовые данные
+- метод `test()` - тест на создание и вывод на страницу
 #### StorageBasketTest
 Тест сохранения и загрузки корзины в локальное хранилище
 #### Класс содержит:
-- свойство <code>testData: IBasketModel</code> - тестовые данные
-- метод <code>test()</code> - тест на сохранения и загрузки корзины в локальное хранилище
+- свойство `testData: IBasketModel` - тестовые данные
+- метод `test()` - тест на сохранения и загрузки корзины в локальное хранилище
 #### StorageOrderTest
 Тест сохранения и загрузки параметров заказа в локальное хранилище
 #### Класс содержит:
-- свойство <code>testData: Partial<IOrderModel></code> - тестовые данные
-- метод <code>test()</code> - тест на сохранения и загрузки параметров заказа в локальное хранилище
+- свойство `testData: Partial<IOrderModel>` - тестовые данные
+- метод `test()` - тест на сохранения и загрузки параметров заказа в локальное хранилище
 #### APITest
 Тест загрузки товаров из API
 #### Класс содержит:
-- метод <code>test()</code> - загрузки товаров из API
+- метод `test()` - загрузки товаров из API
