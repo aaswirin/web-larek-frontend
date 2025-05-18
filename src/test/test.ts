@@ -1,11 +1,14 @@
 /**
  * Модуль для запуска всех тестов
  */
-import { BayerTest } from "./bayer/test";
 import { GoodTest } from "./goods/test";
 import { OrderTest } from "./order/test";
 import { BasketTest } from "./basket/test";
 import { APITest } from "./api/test";
+import { GoodViewTest } from "./goodsview/test";
+import { PageViewTest } from "./pageview/test";
+import { StorageBasketTest } from "./storage/testBasket";
+import { StorageOrderTest } from "./storage/testOrder";
 
 /**
  * Запуск всех тестов
@@ -15,37 +18,29 @@ import { APITest } from "./api/test";
 export function startTests() {
   console.log('Старт тестов');
 
-  // 1. Покупатель
-  console.log('Тест модели "Покупатель"');
-  const test1: BayerTest = new BayerTest('Модель "Покупатель"');
-  test1.test();
-  test1.consoleResult();
+  // 1. Товар
+  new GoodTest('Модель "Товары"').test();
 
-  // 2. Товар
-  console.log('Тест модели "Товары"');
-  const test2: GoodTest = new GoodTest('Модель "Товары"');
-  test2.test();
-  test2.consoleResult();
+  // 2. Заказ
+  new OrderTest('Модель "Заказ"').test();
 
-  // 3. Заказ
-  console.log('Тест модели "Заказ"');
-  const test3: OrderTest = new OrderTest('Модель "Заказ"')
-  test3.test();
-  test3.consoleResult();
+  // 3. Корзина
+  new BasketTest('Модель "Корзина"').test();
 
-  // 4. Корзина
-  console.log('Тест модели "Корзина"');
-  const test4: BasketTest = new BasketTest('Модель "Корзина"')
-  test4.test();
-  test4.consoleResult();
+  // 4. Отображение Товар
+  new GoodViewTest('Отображение "Товар"').test();
 
-  // 5. API
-  console.log('Тест "API"');
-  const test5: APITest = new APITest('API')
-  test5.test();
-  //test5.consoleResult();
+  // 5. Отображение "Страница"
+  new PageViewTest('Отображение "Страница"').test();
 
-  //console.log('Окончание тестов');
+  // 6. Хранилище Корзина
+  new StorageBasketTest('Хранилище "Корзина"').test();
+
+  // 7. Хранилище Заказ
+  new StorageOrderTest('Хранилище "Заказ"').test();
+
+  // 100. API
+  new APITest('API').test();
 
   return true;
 }

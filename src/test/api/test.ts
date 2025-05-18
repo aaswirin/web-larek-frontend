@@ -8,18 +8,17 @@ import { API_URL } from "../../utils/constants";
 
 export class APITest extends Test {
 
-  async test() {
+  test() {
     try {
       const api = new LarekAPI(API_URL);
       // 1. Загрузка из API Товаров
-      await api.getGoods()
+      api.getGoods()
         .then(data => {
           // Всё отлично!
           this.result = {
             code: -1,
             message: '',
           }
-          console.log(data)
           this.consoleResult();
         })
         .catch(err => {

@@ -5,7 +5,7 @@
 /**
  * Интерфейс для результатов теста
  *
- * @interface IResult
+ * @view IResult
  *  @property {number | null} code Код ошибки
  *  @property {string} message Сообщение ошибки
  */
@@ -36,6 +36,7 @@ export abstract class Test {
       code: null,
       message: "",
     };
+    console.log(`Тест ${this.name} -> Старт`);
   }
 
   /**

@@ -4,27 +4,29 @@
 
 import { Test } from "../abstract/test";
 import { IOrderModel } from "../../types/order";
-import { Order } from "../../components/model/orderModel";
+import { OrderModel } from "../../components/model/orderModel";
+import {EventEmitter} from "../../components/base/events";
+import {TIdGoodType} from "../../types/good/model";
 
 export class OrderTest extends Test {
   protected testData: IOrderModel = {
-    payment: "online",
+    payment: "offline",
     total: 2200,
-    items: [
+    goods: [
       "854cef69-976d-4c2a-a18c-2aa45046c390",
       "c101ab44-ed99-4a54-990d-47aa2bb4e7d9"
     ],
-    bayer: {
-      email: 'boss@grandfather.ru',
-      phone: '+71234567890',
-      address: 'На деревню дедушке',
-    },
+    email: 'boss@grandfather.ru',
+    phone: '+71234567890',
+    address: 'На деревню дедушке',
   };
 
   test() {
     try {
+      const events = new EventEmitter();
+
       // 1. Создание и последующее чтение
-      const objOrder = new Order(this.testData);
+      const objOrder = new OrderModel(events, this.testData);
       let data: IOrderModel = objOrder.getOrder();
 
       if (!this.compareResult(data)) {
@@ -60,5 +62,7 @@ export class OrderTest extends Test {
         message: e.message,
       }
     }
+
+    this.consoleResult();
   }
 }

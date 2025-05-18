@@ -1,4 +1,8 @@
 /**
+ * Типы и интерфейсы для модели данных "Товар"
+ */
+
+/**
  * Тип для категории товара
  *
  * @type { 'софт-скил' | 'другое' | 'дополнительное' | 'кнопка' | 'хард-скил' } TCategoryType
@@ -8,15 +12,15 @@ export type TCategoryType = 'софт-скил' | 'другое' | 'дополн
 /**
  * Тип для id товара
  *
- * @type {string} TIdGoodType
+ * @type {string} TIdGoodType Тип Id товара
  */
 export type TIdGoodType = string;
 
 
 /**
- * Интерфейс для товара
+ * Интерфейс для модели "Товар"
  *
- * @interface IGood
+ * @interface IGoodModel
  *   @property {TIdGoodType} id id товара
  *   @property {string} description описание
  *   @property {string} image URL картинки
@@ -31,11 +35,12 @@ export type TIdGoodType = string;
  *    category: 'софт-скил',
  *    price: 750,}
  */
-export interface IGood {
-  id: TIdGoodType;          // id
-  description: string;      // описание
-  image: string;            // URL картинки
-  title: string;            // наименование
-  category: TCategoryType;  // категория
-  price: number | null;     // цена, может быть null (зачем? для аукциона?)
+export interface IGoodModel {
+  id: TIdGoodType;                // id
+  description: string;            // описание
+  image: string;                  // URL картинки
+  title: string;                  // наименование
+  category: TCategoryType;        // категория
+  price: number | null;           // цена, может быть null (зачем? для аукциона?)
+  number?:  number;               // Порядковый номер
 }

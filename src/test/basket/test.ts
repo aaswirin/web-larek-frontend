@@ -3,25 +3,33 @@
  */
 
 import { Test } from "../abstract/test";
-import { IBasketModel } from "../../types/basket";
-import { Basket } from "../../components/model/basketModel";
+import { IBasketModel } from "../../types/basket/model";
+import { BasketModel } from "../../components/model/basketModel";
+import {TIdGoodType} from "../../types/good/model";
+import {EventEmitter} from "../../components/base/events";
 
 export class BasketTest extends Test {
   protected today:Date = new Date();
 
   protected testData: IBasketModel = {
-    startDate: this.today,
-    goods: [
+    startDate: new Date(),
+    goods: new Set([
       "854cef69-976d-4c2a-a18c-2aa45046c390",
       "c101ab44-ed99-4a54-990d-47aa2bb4e7d9"
-    ],
+    ]),
   };
 
   test() {
     try {
+      const events = new EventEmitter();                // Брокер событий
+
       // 1. Создание и последующее чтение
-      const objBasket = new Basket(this.testData);
-      let data: IBasketModel = objBasket.getBasket();
+      const objBasket = new BasketModel(events, this.testData);
+      let data =
+      {
+        startDate: objBasket.startDate,           // Дата и время начала формирования корзины
+        goods: new Set(objBasket.getGoods()),
+      }
 
       if (!this.compareResult(data)) {
         this.result = {
@@ -33,8 +41,12 @@ export class BasketTest extends Test {
       }
 
       // 2. Запись и последующее чтение
-      objBasket.setBasket(this.testData);
-      data = objBasket.getBasket();
+      objBasket.setGoods(Array.from(this.testData.goods));
+      data =
+        {
+          startDate: objBasket.startDate,           // Дата и время начала формирования корзины
+          goods: new Set(objBasket.getGoods()),
+        }
 
       if (!this.compareResult(data)) {
         this.result = {
@@ -56,5 +68,7 @@ export class BasketTest extends Test {
         message: e.message,
       }
     }
+
+    this.consoleResult();
   }
 }
