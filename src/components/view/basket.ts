@@ -1,21 +1,17 @@
+/**
+ * Модуль описывает отображение "Корзина"
+ */
+
 import { Component } from "../base/component";
-import { ensureElement } from "../../utils/utils";
+import {cloneTemplate, ensureElement} from "../../utils/utils";
 import { IEvents } from "../base/events";
 import { settings } from "../../utils/constants";
-//import { IBasketView } from "../../types/basket/view";
+import {CardGood} from "./cardGood";
 
 /**
  * Класс для отображения корзины
- * @class Basket
- *   @property {HTMLElement} elementCategory Элемент для отображения категории
- *   @property {HTMLElement} elementTitle Элемент для отображения заголовка
- *   @property {HTMLImageElement} elementImage Элемент для отображения картинки
- *   @property {HTMLElement} elementPrice Элемент для отображения цены
- *   @property {HTMLElement} elementPrice Элемент для отображения цены
  */
 export class Basket extends Component<IBasketView> {
-  static template = ensureElement<HTMLTemplateElement>(settings.elements.basket.template);
-
   protected galleryCards: HTMLElement;
   protected basketSum: HTMLElement;
 
@@ -30,12 +26,17 @@ export class Basket extends Component<IBasketView> {
       this.events.emit(settings.events.order.makeOrder));
   }
 
+  /**
+   * Сеттер для записи товаров в корзину
+   */
   set basketList(itemsGoods: HTMLElement[]){
     this.galleryCards.replaceChildren(...itemsGoods);
   }
 
+  /**
+   * Сеттер для установки суммы корзины
+   */
   set totalSum(value: number) {
     this.setText(this.basketSum, value);
   }
-
 }

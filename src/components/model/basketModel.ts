@@ -1,76 +1,118 @@
 /**
  * Модуль описывает модель данных "Корзина"
- * @module
  */
+
 import { IBasketModel } from "../../types/basket/model";
 import { isEmpty } from "../../utils/utils";
-import {IGoodModel, TIdGoodType} from "../../types/good/model";
-import {IEvents} from "../base/events";
-import {settings} from "../../utils/constants";
+import { IEvents } from "../base/events";
+import { settings } from "../../utils/constants";
+import { TIdGoodType } from "../../types";
+import {IGoodsModel, TGood} from "../../types/good/model";
 
 /**
  * Класс для корзины
- *
- * @class Basket
- *   @property {Date} startDate Дата и время начала формирования корзины
- *   @property {Set<TIdGoodType>} goods список товаров в корзине
  */
-export class BasketModel {
-  protected events: IEvents;           // Список товаров
-  public startDate: Date | null;       // Дата и время начала формирования корзины
-  protected goods: Set<TIdGoodType>;   // Список товаров в корзине
+export class BasketModel implements IBasketModel {
+  protected events: IEvents;            // Список товаров
+  protected _editDate: Date | null;     // Дата и время последнего изменения корзины
+  protected _goods: Set<TIdGoodType>;   // Список товаров в корзине
 
-  constructor(events: IEvents, data: IBasketModel) {
+  constructor(events: IEvents) {
     this.events = events;
-    this.goods = new Set<TIdGoodType>();
+    this._goods = new Set<TIdGoodType>();
+  }
+
+  /**
+   * Сеттер для даты последнего редактирования корзины
+   */
+  set editDate(date: Date) {
+    this._editDate = date;
+  }
+
+  /**
+   * Геттер для даты последнего редактирования корзины
+   */
+  get editDate() {
+    return this._editDate;
+  }
+
+  /**
+   * Факт редактирования корзины
+   */
+  protected edit() {
+    if (isEmpty(this._editDate)) this._editDate = new Date();
+  }
+
+  /**
+   * Очистка корзины
+   */
+  protected clear() {
+    this._goods.clear();
+  }
+
+  /**
+   * Сеттер для списка товаров
+   */
+  get goods(): Set<TIdGoodType> {
+    return new Set(this._goods);
+  }
+
+  /**
+   * Геттер для списка товаров
+   */
+  set goods(data: Set<TIdGoodType> | null) {
+    this.clear();
     if (!isEmpty(data)) {
-      this.startDate = data.startDate;
-      this.goods = new Set(data.goods);
+      this._goods = new Set<TIdGoodType>(data);
     }
+
+    this.events.emit(settings.events.basket.changeBasket);
   }
 
-  start() {
-    if (isEmpty(this.startDate)) this.startDate = new Date();
+  /**
+   * Добавить товар в корзину
+   */
+  addGood(id: TIdGoodType): void {
+    this._goods.add(id);
+    this.edit();
+
+    this.events.emit(settings.events.basket.changeBasket);
   }
 
-  clear() {
-    this.goods.clear();
-    this.events.emit(settings.events.basket.goodChangeBasket);
+  /**
+   * Удалить товар из корзины
+   */
+  deleteGood(id: TIdGoodType): void {
+    this._goods.delete(id);
+    if (this.getCount() === 0) this._editDate = null;
+
+    this.events.emit(settings.events.basket.changeBasket);
   }
 
-  getGoods(): TIdGoodType[] {
-    return Array.from(this.goods);
-  }
-
-  setGoods(data: TIdGoodType[]): void {
-    this.goods = new Set(data);
-    this.start();
-  }
-
-  addGood(data: Partial<IGoodModel>): void {
-    this.goods.add(data.id);
-    this.start();
-  }
-
-  deleteGood(data: Partial<IGoodModel>): void {
-    this.goods.delete(data.id);
-    if (this.getCount() === 0) this.startDate = null;
-  }
-
+  /**
+   * Получить количество товаров в корзине
+   */
   getCount(): number {
-    return this.goods.size;
+    return this._goods.size;
   }
 
-  isBasket(data: Partial<IGoodModel>): boolean {
-    return this.goods.has(data.id);
+  /**
+   * Товар в корзине?
+   */
+  isBasket(id: TIdGoodType): boolean {
+    return this._goods.has(id);
   }
 
-  calcTotal(): number {
+  /**
+   * Посчитать стоимость товаров в корзине
+   */
+  calcTotal(Goods: IGoodsModel): number {
     let total = 0;
-    this.goods.forEach(item => {
-
+    this._goods.forEach(item => {
+        total += Goods.getGood(item).price;
       }
     )
     return total;
   }
+
 }

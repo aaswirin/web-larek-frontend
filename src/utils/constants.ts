@@ -1,29 +1,67 @@
+import {TCategoryType} from "../types";
+
 export const API_URL = `${process.env.API_ORIGIN}/api/weblarek`;
 export const CDN_URL = `${process.env.API_ORIGIN}/content/weblarek`;
 
 export const settings = {
+  // API
+  api: {
+    // Связки полей модели данных и API
+    /**
+     * Товары
+     * goods[N][0] - имя поля в модели данных
+     * goods[N][1] - имя поля в API
+     */
+    goods: [
+      ['id', 'id'],
+      ['description', 'description'],
+      ['image', 'image'],
+      ['title', 'title'],
+      ['category', 'category'],
+      ['price', 'price'],
+    ],
+    /**
+     * Заказ
+     * order[N][0] - имя поля в модели данных
+     * order[N][1] - имя поля в API
+     */
+    order: [
+      ['payment', 'payment'],
+      ['email', 'email'],
+      ['phone', 'phone'],
+      ['address', 'address'],
+    ],
+  },
   // События
   events: {
     // Карта товара
     card: {
-      goodsAllChange: 'goods:all:change',      // Событие "Изменён весь список товаров"
+      goodsAllChange: 'goods:allChange',       // Событие "Изменён весь список товаров"
       cardDetail: 'card:showDetail',           // А покажи мне подробно товар
+      cardBasket: 'card:editBasket',           // Изменить корзину из детального просмотра
     },
+    // Корзина
     basket: {
-      goodChangeBasket: 'basket:change',       // Добавить/Удалить товар в корзине
+      changeBasket: 'basket:change',           // Корзина поменялась
+      goodDelete: 'basket:delete',             // Удалён товар из корзины
     },
-    page: {
-      showBasket: 'page:showBasket',           // Событие "А покажи ка мне корзину"
-    },
+    // Заказ
     order: {
       makeOrder: 'order:make',                 // Событие "Сделать заказ"
       changeOrder: 'order:change',             // Событие "Изменился заказ"
+    },
+    // Страница
+    page: {
+      showBasket: 'page:showBasket',           // Событие "А покажи ка мне корзину"
     },
   },
   keysClose: [                                 // Список клавиш, по которым закрываем окно. Вдруг поменяется?
     'Escape',
     //'F10',
   ],
+  storage: {
+    active: true,                              // Сохранять ли в локальное хранилище?
+  },
   // Элементы вёрстки
   elements: {
     // Страница
@@ -53,6 +91,13 @@ export const settings = {
       title: '.card__title',                   // Заголовок
       image: '.card__image',                   // Картинка
       price: '.card__price',                   // Цена
+      catClass : new Map([                     // Классы для разных категорий
+        ['софт-скил', 'card__category_soft'],
+        ['другое', 'card__category_other'],
+        ['дополнительное', 'card__category_additional'],
+        ['кнопка', 'card__category_button'],
+        ['хард-скил', 'card__category_hard'],
+     ]),
     },
     // Корзина
     basket: {

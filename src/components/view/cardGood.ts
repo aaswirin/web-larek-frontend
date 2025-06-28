@@ -1,28 +1,19 @@
-import { TIdGoodType } from "../../types/good/model";
-import { ensureElement, priceToString } from "../../utils/utils";
+/**
+ * Модуль описывает отображение "ТоварЫ"
+ */
+
+import { ensureElement, isEmpty } from "../../utils/utils";
 import { Component } from "../base/component";
 import { IEvents } from "../base/events";
 import { CDN_URL, settings } from "../../utils/constants";
-import {IGoodView, TCardGoodStatus} from "../../types/good/view"
+import { IGoodView } from "../../types/good/view"
+import { TIdGoodType } from "../../types";
+import {closeModal, priceToString} from "../function/function";
 
 /**
  * Класс для отображения карты товара
- * @class cardGood
- *   @property {HTMLTemplateElement} template Заготовка под карту
- *   @property {HTMLElement} elementCategory Элемент для отображения категории
- *   @property {HTMLElement} elementTitle Элемент для отображения заголовка
- *   @property {HTMLImageElement} elementImage Элемент для отображения картинки
- *   @property {HTMLElement} elementPrice Элемент для отображения цены
  */
 export class CardGood extends Component<IGoodView> {
-  // Заготовки под карту
-  // 1. В каталоге
-  static templateCatalog: HTMLTemplateElement = ensureElement(settings.elements.card.templateCatalog) as HTMLTemplateElement;
-  // 2. В просмотре товара
-  static templateDetails: HTMLTemplateElement = ensureElement(settings.elements.card.templateDetails) as HTMLTemplateElement;
-  // 3. В корзине
-  static templateBasket: HTMLTemplateElement = ensureElement(settings.elements.card.templateBasket) as HTMLTemplateElement;
-
   protected elementNumber: HTMLElement;               // Номер
   protected elementCategory: HTMLElement;             // Категория
   protected elementTitle: HTMLElement;                // Заголовок
@@ -32,84 +23,110 @@ export class CardGood extends Component<IGoodView> {
   protected basketDelete: HTMLButtonElement;          // Кнопка "Удалить", если карта товара в корзине
   protected goodId: TIdGoodType;                      // Id товара
 
-  constructor(container: HTMLTemplateElement, protected events: IEvents, protected status?: TCardGoodStatus ) {
+  constructor(container: HTMLTemplateElement, protected events: IEvents) {
     super(container);
 
-    /*if (this.owner === 'catalog' || this.owner === 'detail') {
-      this.elementCategory = ensureElement(settings.elements.card.category, this.container) as HTMLElement;
-      this.elementImage = ensureElement(settings.elements.card.image, this.container) as HTMLImageElement;
-    }
-    else if (this.owner === 'basket') {
-      this.elementNumber = ensureElement(settings.elements.card.number, this.container) as HTMLImageElement;
-    }*/
-
+    this.elementCategory = container.querySelector(settings.elements.card.category) as HTMLElement;
+    this.elementImage = container.querySelector(settings.elements.card.image) as HTMLImageElement;
+    this.elementNumber = container.querySelector(settings.elements.card.number) as HTMLElement;
     this.elementTitle = ensureElement(settings.elements.card.title, this.container) as HTMLElement;
     this.elementPrice = ensureElement(settings.elements.card.price, this.container) as HTMLElement;
+    this.basketButton = container.querySelector(settings.elements.modal.basketButton) as HTMLButtonElement;
+    this.basketDelete = container.querySelector(settings.elements.card.buttonDelete) as HTMLButtonElement;
 
-    // Разбивка по использованию: Слушатели и доп элементы
-    /*
-    switch (this.owner) {
-      case 'catalog':    // Для карты в каталоге
-        this.container.addEventListener('click',() =>
-          this.events.emit(settings.events.card.cardDetail, {id: this.goodId}));
-        break;
-      case 'detail':    // Для карты в окне детального просмотра
-        this.basketButton = ensureElement(settings.elements.modal.basketButton, this.container) as HTMLButtonElement;
-        this.basketButton.addEventListener('click',() =>
-          this.events.emit(settings.events.basket.goodChangeBasket, {id: this.goodId}));
-        // Кнопка
-        switch (status) {
-          case 'free':
-            this.setText(this.basketButton, 'Добавить в корзину');
-            break;
-          case 'basket':
-            this.setText(this.basketButton, 'Удалить из корзины');
-            break;
-          case 'no_price':
-            this.setText(this.basketButton, 'Нет цены');
-            this.setDisabled(this.basketButton, true);
-            break;
-        }
-        break;
-      case 'basket':    // Для карты в корзине
-        this.basketDelete = ensureElement(settings.elements.card.buttonDelete, this.container) as HTMLButtonElement;
-        this.basketDelete.addEventListener('click',() =>
-          this.events.emit(settings.events.basket.goodChangeBasket, {id: this.goodId, basket: this})
-        );
-        break;
+    // Слушатели и доп элементы
+    // Для карты в каталоге
+    if (!isEmpty(this.elementImage)) {
+      this.container.addEventListener('click', () =>
+        this.events.emit(settings.events.card.cardDetail, {id: this.goodId}));
+    }
+    // Для карты в детальном просмотре
+    if (!isEmpty(this.basketButton)) {
+      this.basketButton.addEventListener('click', () =>
+        this.events.emit(settings.events.card.cardBasket, {id: this.goodId}));
+    }
+    // Для карты в корзине
+    if (!isEmpty(this.basketDelete)) {
+      this.basketDelete.addEventListener('click', () =>
+        this.events.emit(settings.events.basket.goodDelete, {id: this.goodId}));
     }
 
-     */
+
+   //ensureElement(settings.elements.modal.basketButton, windowModal)
+   //   .addEventListener('click', () => {
+   //    displayedModal = closeModal(displayedModal, windowModal, contentModal)
+   //  });
   }
 
+  /**
+   * Сеттер для номера карты
+   */
   set number(value: number) {
     this.setText(this.elementNumber, value);
   }
 
+  /**
+   * Сеттер для категории
+   */
   set category(value: string) {
     this.setText(this.elementCategory, value);
+    // Удалить чё было и добавить нужный
+    settings.elements.card.catClass.forEach((classCategory, key) => {
+      if (key === value) {
+        this.toggleClass(this.elementCategory, classCategory, true);
+      } else {
+        this.toggleClass(this.elementCategory, classCategory, false);
+      }
+    });
   }
 
+  /**
+   * Сеттер для названия
+   */
   set title(value: string) {
     this.setText(this.elementTitle, value);
   }
 
+  /**
+   * Геттер для названия
+   */
   get title() {
     return this.elementTitle.textContent;
   }
 
+  /**
+   * Сеттер для изображения
+   */
   set image(value: string) {
     this.setImage(this.elementImage, CDN_URL + value.replace(".svg", ".png"), this.title);
   }
 
+  /**
+   * Сеттер для номера цены
+   */
   set price(value: number | null) {
     this.setText(this.elementPrice, priceToString(value));
   }
 
+  /**
+   * Сеттер для id
+   */
   set id(value: TIdGoodType) {
     this.goodId = value;
   }
 
+  /**
+   * Сеттер для кнопки
+   */
   set buttonText(value: string) {
+    this.setText(this.basketButton, value);
   }
+
+  /**
+   * Сеттер для видимости кнопки
+   */
+  set buttonDisabled(value: boolean) {
+    this.setDisabled(this.basketButton, value);
+  }
+
 }

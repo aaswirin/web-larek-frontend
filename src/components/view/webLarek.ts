@@ -3,9 +3,9 @@
  * @module
  */
 
-import { IGoodModel } from "../../types/good/model";
+import {TGood} from "../../types/good/model";
 import { CardGood } from "./cardGood";
-import {cloneTemplate, ensureElement, isEmpty, priceToString} from "../../utils/utils";
+import {cloneTemplate, ensureElement, isEmpty} from "../../utils/utils";
 import { settings } from "../../utils/constants";
 import { GoodsModel } from "../model/goodsModel";
 import { BasketModel } from "../model/basketModel";
@@ -16,10 +16,9 @@ import {LarekAPI} from "../api/larekAPI";
 import {LarekStorage} from "../storage/storage";
 import {showError} from "../base/error";
 import {OrderModel} from "../model/orderModel";
-import {IOrderModel, TPaymentType} from "../../types/order";
-import {IOrderView, Order} from "./order";
-import {IOrderApi} from "../../types/api";
-import {TCardGoodStatus} from "../../types/good/view";
+import {OrderViewOrder} from "./order";
+import {IGoodView} from "../../types/good/view";
+import {IOrderView} from "../../types/order/view";
 
 export interface IWebLarek {
   events: EventEmitter;
@@ -30,7 +29,7 @@ export interface IWebLarek {
   orderModel: OrderModel;
   page: Page;
   basket: Basket;
-  order: Order;
+  order: OrderViewOrder;
 }
 
 /**
@@ -63,14 +62,13 @@ export class WebLarek {
   // Oтображения
   protected page: Page;
   protected basket: Basket;
-  protected order: Order;
+  protected order: OrderViewOrder;
 
   constructor(components: Partial<IWebLarek>) {
     this.events = components.events;
     this.api = components.api;
     this.storage = components.storage;
     this.goodsModel = components.goodsModel;
-    this.basketModel = components.basketModel;
     this.basketModel = components.basketModel;
     this.orderModel =  components.orderModel;
     this.page = components.page;
@@ -80,9 +78,9 @@ export class WebLarek {
 
   initialize(): void {
     // Загрузить товары из API
-    this.api.getGoods()
+    /*this.api.getGoods()
       .then(data => {
-        this.goodsModel.setGoods(data.items as IGoodModel[]);
+        this.goodsModel.goods = new Map(data.items);
       })
       .catch(err => {
         showError('Загрузка товаров', err.message);
@@ -99,9 +97,10 @@ export class WebLarek {
     // ... и сообщения
     // Сообщение -> Изменение списка товаров в каталоге
     this.events.on(settings.events.card.goodsAllChange, () => {
-      const goodsHTMLArray = this.goodsModel.getGoods().map(item =>
-        new CardGood(cloneTemplate(CardGood.templateCatalog), this.events).render(item)
+      const goodsHTMLArray = Array.from(this.goodsModel.goods).map(item =>
+        new CardGood(cloneTemplate(CardGood.templateCatalog), this.events).render(item as Partial<TGood>)
       )
+
       this.page.render({
           goodsList: goodsHTMLArray,
           basketCount: this.basketModel.getCount(),
@@ -110,13 +109,13 @@ export class WebLarek {
     })
 
     // Сообщение -> Клик на карте товара
-    this.events.on(settings.events.card.cardDetail, (data: Partial<IGoodModel>) => {
+    this.events.on(settings.events.card.cardDetail, (data: Partial<TGood>) => {
       // Показ карты товара
       this.showCardDetails(this.goodsModel.getGood(data.id), this.basketModel.isBasket(data));
     })
 
     // Сообщение -> Клик на кнопке в карте товара "Добавить"/"Удалить" в корзину
-    this.events.on(settings.events.basket.goodChangeBasket,  (data: Partial<IGoodModel & {basket: Basket}>) => {
+    this.events.on(settings.events.basket.goodChangeBasket,  (data: Partial<TGood & {basket: Basket}>) => {
       if (!isEmpty(data)) {
         if (this.basketModel.isBasket(data)) this.basketModel.deleteGood(data); // Товар уже в корзине
         else this.basketModel.addGood(data);    // Товара нет в корзине
@@ -128,8 +127,8 @@ export class WebLarek {
 
       this.storage.saveBasket(
         {
-          startDate: this.basketModel.startDate,
-          goods: this.basketModel.getGoods()   // список товаров в корзине
+          startDate: this.basketModel.editDate,
+          goods: this.basketModel.goods,   // список товаров в корзине
         }
       );
 
@@ -154,30 +153,25 @@ export class WebLarek {
     // Сообщение -> Клик на кнопке "Далее" или "Оплатить" или "За новыми покупками" в окне заказа
     this.events.on(settings.events.order.changeOrder,(data: Partial<IOrderModel>) => {
       // Что-то поменяли
+      /*
       if (!isEmpty(data)) {
         // Добавить товары из корзины
-        data.goods = this.basketModel.getGoods();
-        this.orderModel.setOrder(data);
-        const order = this.orderModel.getOrder();
+        const order = this.basketModel;
         if (this.order.showPage === 'order') {  // первая страница
           this.order = new Order(cloneTemplate(Order.templatePageContacts), this.events);
           const orderView = this.order.render(order as Partial<IOrderView>);
           this.contentModal.replaceChildren(orderView);
         } else if (this.order.showPage === 'contacts') {
-          let totalSum = 0;
-          // Посчитать сумму!!!
-          this.orderModel.getGoods().forEach(idGoods => {
-            const good = this.goodsModel.getGood(idGoods);
-            totalSum = totalSum + good.price;
-          });
+          const totalSum = this.basketModel.calcTotal();
 
           // ... и отправить заказ
+
           // переписать в новую структуру, а вдруг API измениться?
           const orderSend: IOrderApi = {
-            payment: order.payment,  // Тип оплаты
-            email: order.email,      // Электронная почта
-            phone: order.phone,      // Телефон
-            address: order.address,  // Адрес доставки
+            payment: this.orderModel.payment,  // Тип оплаты
+            email: this.orderModel.email,      // Электронная почта
+            phone: this.orderModel.phone,      // Телефон
+            address: this.orderModel.address,  // Адрес доставки
             total: totalSum,         // Сумма заказа
             items: order.goods,      // Список товаров
           };
@@ -208,7 +202,7 @@ export class WebLarek {
       } else if (this.order.showPage === 'success') {  // Уже всё заказано
         this.closeModal();
       }
-    })
+    })*/
 
   }
 
@@ -227,7 +221,8 @@ export class WebLarek {
     this.contentModal.replaceChildren('');
   }
 
-  showCardDetails(good: IGoodModel, isBasket: boolean): void {
+  showCardDetails(good: TGood, isBasket: boolean): void {
+    /*
     const price = good.price;
     let status: TCardGoodStatus = 'free';
     if (isBasket) {
@@ -235,11 +230,11 @@ export class WebLarek {
     } else if (isEmpty(price)) {
       status = 'no_price';
     }
-
-    const card=
-      new CardGood(cloneTemplate(CardGood.templateDetails), this.events, status)
-        .render(good);
-    this.contentModal.replaceChildren(card);
+*/
+    //const card=
+    //  new CardGood(cloneTemplate(CardGood.templateDetails), this.events, status)
+    //    .render(good);
+    //this.contentModal.replaceChildren(card);
 
     ensureElement(settings.elements.modal.basketButton, this.windowModal)
       .addEventListener('click', () => {
@@ -250,6 +245,7 @@ export class WebLarek {
   }
 
   rebuildBasket(): void {
+    /*
     let count: number = 0;
     let totalSum: number = 0;
 
@@ -269,6 +265,8 @@ export class WebLarek {
     });
 
     this.contentModal.replaceChildren(basketView);
+
+     */
   }
 
   showBasket():void {
@@ -278,12 +276,15 @@ export class WebLarek {
   }
 
   showOrder() {
+    /*
     const order = this.orderModel.getOrder();
     this.order = new Order(cloneTemplate(Order.templatePageOrder), this.events);
     console.log(order);
     const orderView = this.order.render(order as Partial<IOrderView>);
 
     this.contentModal.replaceChildren(orderView);
+
+     */
   }
 
 }

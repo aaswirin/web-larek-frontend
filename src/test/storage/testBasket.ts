@@ -3,27 +3,31 @@
  */
 
 import { Test } from "../abstract/test";
-import {IBasketModel} from "../../types/basket/model";
-import {TIdGoodType} from "../../types/good/model";
-import {LarekStorage} from "../../components/storage/storage";
+import { TIdGoodType } from "../../types";
+import { LarekStorage } from "../../components/storage/storage";
+import { IBasketModel } from "../../types/basket/model";
+import { isEmpty } from "../../utils/utils";
 
 export class StorageBasketTest extends Test {
-  protected today: Date = new Date();
+  protected today:Date = new Date();
 
-  protected testData: IBasketModel  = {
-      startDate: this.today,
-      goods: new Set<TIdGoodType>(['GUID первого товара', 'GUID второго товара']),
+  protected testData = {
+    editDate: this.today,
+    goods: new Set<TIdGoodType>([
+      "854cef69-976d-4c2a-a18c-2aa45046c390",
+      "c101ab44-ed99-4a54-990d-47aa2bb4e7d9"
+    ]),
   };
 
   test() {
     const storage = new LarekStorage();
     // Предохранить что было в хранилище
-    const oldBasket: IBasketModel = storage.loadBasket()
+    const oldBasket: Partial<IBasketModel> = storage.loadBasket()
 
     try {
       // 1. Запись и последующее чтение
       storage.saveBasket(this.testData);
-      const data: IBasketModel = storage.loadBasket();
+      const data: Partial<IBasketModel> = storage.loadBasket();
 
       if (!this.compareResult(data)) {
         this.result = {
@@ -46,7 +50,11 @@ export class StorageBasketTest extends Test {
       }
     } finally {
       // Восстановить хранилище
-      storage.saveBasket(oldBasket);
+      if (isEmpty(oldBasket)) {
+        storage.clearBasket();
+      } else {
+        storage.saveBasket(oldBasket);
+      }
     }
 
     this.consoleResult();

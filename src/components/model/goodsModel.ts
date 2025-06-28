@@ -1,40 +1,60 @@
 /**
  * Модуль описывает модель данных "ТоварЫ"
- * @module
  */
-import { IGoodModel, TIdGoodType} from "../../types/good/model"
-import { isEmpty } from "../../utils/utils";
+
+import { TGood, IGoodsModel, TListGoods } from "../../types/good/model"
 import { IEvents } from "../base/events";
 import { settings } from "../../utils/constants";
+import { TIdGoodType } from "../../types";
 
 /**
  * Класс для товара
- *
- * @class GoodsModel
- *   @property {Map} goods Список товаров
  */
-export class GoodsModel {
-  protected goods: Map<TIdGoodType, IGoodModel> = new Map();   // Список товаров
+export class GoodsModel implements IGoodsModel {
+  protected _goods: TListGoods;   // Список товаров
 
-  constructor(protected events: IEvents, data: IGoodModel[] | null) {
+  constructor(protected events: IEvents) {
     this.events = events;
-    if (!isEmpty(data)) this.setGoods(data);
+    this._goods = new Map();
   }
 
-  getGoods(): IGoodModel[] {
-    return Array.from(this.goods, ([key, value]) => value);
-  }
-
-  setGoods(data: IGoodModel[]): void {
-    this.goods = new Map();
+  /**
+   * Сеттер для списка товаров
+   */
+  set goods(data: TListGoods) {
+    this.clear();
     data.forEach(good => {
-      this.goods.set(good.id, good);
+      this._goods.set(good.id, good);
     })
     this.events.emit(settings.events.card.goodsAllChange)
   }
 
-  getGood(id: TIdGoodType): IGoodModel {
-    return this.goods.get(id);
+  /**
+   * Геттер для списка товаров
+   */
+  get goods(): TListGoods {
+    return new Map(this._goods);
+  }
+
+  /**
+   * Очистить список товаров
+   */
+  protected clear(): void {
+    this._goods.clear();
+  }
+
+  /**
+   * Отдать один товар
+   */
+  getGood(id: TIdGoodType): TGood {
+    return this._goods.get(id);
+  }
+
+  /**
+   * Записать один товар
+   */
+  setGood(good: TGood): void {
+    this._goods.set(good.id, good);
   }
 
 }

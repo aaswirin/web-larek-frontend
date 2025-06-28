@@ -16,7 +16,7 @@
 Важные файлы:
 - src/pages/index.html — HTML-файл главной страницы
 - src/types/model.ts — файл с типами
-- src/model.ts — точка входа приложения
+- src/index.ts — точка входа приложения
 - src/scss/styles.scss — корневой файл стилей
 - src/utils/constants.ts — файл с константами
 - src/utils/utils.ts — файл с утилитами
@@ -57,19 +57,51 @@ yarn build
 Также в приложении есть дополнительные подсистемы:
 - подсистема тестов для проверки приложения после изменения типов, интерфейсов или классов;
 - подсистема локального хранилища для хранения корзины и параметров заказа между сеансами работы пользователя.
+
+### Настройки приложения
+См. файл src/utils/constants.ts, константа `settings`
+#### Настройка соответствия полей модели данных и API<a id="settings_api"></a>
+Если в API изменяться наименования полей, править только здесь
+- `settings.api.goods` - соответствие полей модели данных карты и API
+- `settings.api.order` - соответствие полей модели данных заказа и API
+#### Настройка сообщений [презентера](#presenter)
+- `settings.events.card` - сообщения карты товаров
+- `settings.events.basket` - сообщения корзины
+- `settings.events.order` - сообщения заказа
+- `settings.events.page` - сообщения страницы приложения
+
+Описание списка сообщений см. ["Описание сообщений между слоями приложения"](#message_list)
+
+#### Настройка списка клавиш, по которым закрыть модальное окно
+Массив клавиш для закрытия окна
+```ts
+settings.keysClose: [
+  'Escape',
+  //'F10',
+]
+```
+#### Настройка активности локального хранилища
+- `settings.storage.active` - Сохранение и восстановления корзины и параметров заказа в локальное хранилище
+
+#### Настройки элементов вёрстки
+- `settings.elements.page` - элементы вёрстки для [страницы](#view_page)
+- `settings.elements.modal` - элементы вёрстки для [модального окна](#view_modal)
+- `settings.elements.card` - элементы вёрстки для [карты товара](#view_card)
+- `settings.elements.basket` - элементы вёрстки для [корзины](#view_basket)
+- `settings.elements.order` - элементы вёрстки для [заказа](#view_order)
 ### Базовые классы
-### Api
+### Api<a id="api"></a>
 Класс реализует базовые методы запросов к серверу.
 #### Класс содержит:
 - метод`get(uri: string)` - отправка запроса "GET"
 - метод`post(uri: string, data: object, method: ApiPostMethods = 'POST')` - отправка данных методом "POST"
-### EventEmitter
+### EventEmitter<a id="presenter"></a>
 Класс реализует отправку и получение событий в приложении
 #### Класс содержит:
 - метод`on<T extends object>(eventName: EventName, callback: (event: T) => void)` - устанавливает обработчик на событие
 - метод`emit<T extends object>(eventName: string, data?: T)` - инициировать событие с данными
 ## Описание данных
-### Описание сообщений между слоями приложения
+### Описание сообщений между слоями приложения<a id="message_list"></a>
 - `goods:all:change` - событие "Изменён список товаров"
 - `card:showDetail` - событие "Показать товар детально"
 - `basket:change` - событие "Добавить/Удалить" товар в корзине
@@ -80,117 +112,137 @@ yarn build
 ### Типы:
 ### TCategoryType
 Описывает тип категории товара
-```
+```ts
 type TCategoryType = 'софт-скил' | 'другое' | 'дополнительное' | 'кнопка' | 'хард-скил';
 ```
 ### TIdGoodType
 Описывает тип ID товара, сейчас `string`, но может измениться при смене API
-```
+```ts
 type TIdGoodType = string;
 ```
 ### TPaymentType
 Описывает тип оплаты заказа.
 - `offline` - оплата при получении, в терминах приложения 'При получении'.
 - `online` - оплата на сайте, в терминах приложения 'Онлайн'.
-```
+```ts
 type TPaymentType = 'offline' | 'online';
 ```
+### TGood
+Описывает тип данных "Товар"
+- `id: TIdGoodType` - id
+- `description: string;` - описание
+- `image: string;` - URL картинки
+- `title: string;` - наименование
+- `category: TCategoryType;` - категория
+- `price: number | null;` - цена, может быть null
+- `number?:  number;` - порядковый номер в корзине
+### TListGoods
+Описывает список товаров в модели ["Товары"](#model_goods)
+```ts
+TListGoods = Map<TIdGoodType, TGood>;
+```
 ### Интерфейсы
-### IGoodModel
-Описывает интерфейс товара
+### IGoodsModel<a id="interface_goods"></a>
+Описывает интерфейс модели ["Товары"](#model_goods)
 #### Интерфейс содержит:
-- `id: TIdGoodType` - id товара
-- `description: string` - описание
-- `image: string` - URL картинки
-- `title: string` - наименование
-- `category: TCategoryType` - категория
-- `price: number | null` - цена
-- `number?:  number;` - порядковый номер
-### IBasketModel
-Описывает интерфейс корзины
+- `goods: TListGoods;` - список товаров
+- `getGood(id: TIdGoodType): TGood;` - получить товар из списка
+- `setGood(good: TGood): void;` - записать товар в список
+### IBasketModel<a id="interface_basket"></a>
+Описывает интерфейс модели ["Корзина"](#model_basket)
 #### Интерфейс содержит:
-- `startDate: Date` - дата и время начала формирования корзины
-- `goods: Set<TIdGoodType>` - список id'ов товаров в корзине
-### IOrderModel
-Описывает интерфейс заказа
+- `editDate: Date;` - дата и время последнего редактирования корзины
+- `goods: Set<TIdGoodType>;` - список товаров в корзине
+- `addGood(id: TIdGoodType): void;` - добавить товар в корзину
+- `deleteGood(id: TIdGoodType): void;` - удалить товар из корзины
+- `getCount(): number;` - количество товаров в корзине
+- `isBasket(id: TIdGoodType): boolean;` - проверить наличие товара в корзине
+- `calcTotal(Goods: IGoodsModel): number;` - посчитать сумму товаров в корзине
+### IOrderModel<a id="interface_order"></a>
+Описывает интерфейс модели ["Заказ"](#model_order)
 #### Интерфейс содержит:
-- `payment: TPaymentType` - тип оплаты
-- `total: number` - сумма заказа
-- `goods: TIdGoodType[]` - список id'ов заказанных товаров
-- `email: string` - электронная почта
-- `phone: string` - телефон
-- `address: string` - адрес доставки
+- `payment: TPaymentType;` - тип оплаты
+- `email: string;` - почта
+- `phone: string;` - телефон
+- `address: string;` - адрес
 ### Классы
-### GoodsModel
-Класс реализует хранение списка товаров. При изменении товара генерирует сообщения:
+### GoodsModel<a id="model_goods"></a>
+Реализует интерфейс [IGoodsModel](#interface_goods)\
+Класс обеспечивает хранение списка товаров. При изменении списка товаров генерирует сообщения:
 - `goods:all:change` - событие "Изменён список товаров"
 #### Класс содержит:
 - свойство `events: IEvents` - брокер событий
 - свойство `goods: Map<TIdGoodType, IGood>` - список товаров
-- конструктор `constructor(protected events: IEvents, data: IGoodModel[] | null)`
+- конструктор `constructor(protected events: IEvents)`
 - метод `getGoods(): IGoodModel[]` - получить список товаров
 - метод `setGoods(data: IGoodModel[]): void` - установить список товаров
 - метод `getGood(id: TIdGoodType): IGoodModel` - получить товар по id
-### BasketModel
-Класс реализует хранение корзины. При изменении состава корзины генерирует сообщения:
+### BasketModel<a id="model_basket"></a>
+Реализует интерфейс [IBasketModel](#interface_basket)\
+Класс обеспечивает хранение корзины. При изменении состава корзины генерирует сообщения:
 - `basket:change` - событие "Добавить/Удалить" товар в корзине
 #### Класс содержит:
-- свойство `events: IEvents` - брокер событий
-- свойство `startDate: Date` - дата и время начала формирования корзины
-- свойство `goods: Set<TIdGoodType>` - список id'ов товаров в корзине
-- конструктор `constructor(events: IEvents, data: IBasketModel)`
-- метод `start(): void` - установка времени и даты начала формирования корзины
-- метод `clear(): void` - очистка корзины
-- метод `setGoods(data: TIdGoodType[]): void : void` - загрузить список товаров в корзину
-- метод `addGood(data: Partial<IGoodModel>): void` - добавить товар в корзину
-- метод `deleteGood(data: Partial<IGoodModel>): void` - удалить товар из корзины
-- метод `getCount(): number` - получить количество товаров в корзине
-- метод `isBasket(data: Partial<IGoodModel>): boolean` - проверить наличие товара в корзине
-- метод `calcTotal(): number` - рассчитать стоимость корзины
-### OrderModel
-Класс реализует хранение заказа.
+- свойство `editDate: Date;` - дата и время последнего редактирования корзины
+- свойство `goods: Set<TIdGoodType>;` - список товаров в корзине
+- конструктор `constructor(events: IEvents)`
+- метод `addGood(id: TIdGoodType): void;` - добавить товар в корзину
+- метод `deleteGood(id: TIdGoodType): void;` - удалить товар из корзины
+- метод `getCount(): number;` - количество товаров в корзине
+- метод `isBasket(id: TIdGoodType): boolean;` - проверить наличие товара в корзине
+- метод `calcTotal(Goods: IGoodsModel): number;` - посчитать сумму товаров в корзине
+### OrderModel<a id="model_order"></a>
+Реализует интерфейс [IOrderModel](#interface_order)\
+Класс обеспечивает хранение заказа.
 #### Класс содержит:
-- свойство `events: IEvents` - брокер событий
-- свойство `payment: TPaymentType` - тип оплаты
-- свойство `total: number` - сумма заказа
-- свойство `goods: TIdGoodType[]` - id заказанных товаров
-- свойство `email: string` - электронная почта
-- свойство `phone: string` - телефон
-- свойство `address: string` - адрес
-- конструктор `constructor(protected events: IEvents, data: Partial<IOrderModel>)`
-- метод `getOrder(): IOrderModel` - получить заказ
-- метод `setOrder(data: Partial<IOrderModel>): void` - записать заказ
-- метод `getGoods(): TIdGoodType[]` - получить список товаров из заказа
-- метод `setGoods(data: TIdGoodType[]): void` - установить список товаров
+- свойство `editDate: Date;` - дата и время последнего редактирования корзины
+- свойство `goods: Set<TIdGoodType>;` - список товаров в корзине
+- конструктор `constructor(protected events: IEvents)`
 ### Слой "API"
-### Интерфейсы
-### IGoodApi
-Описывает товары, полученные из API
-#### Интерфейс содержит:
+### Типы:
+### TGoodApi
+Тип товара из API
+- `id: TIdGoodType` - id товара
+- `description: string` - описание
+- `image: string` - изображение
+- `title: string` - название
+- `category: string` - категория
+- `price: number | null` - цена
+### TListGoodsApi
+Тип для списка товаров из API
 - `total: number` - количество товаров
-- `items: IGoodModel[]` - список товаров
-### IOrderApi
-Описывает заказ, отправляемый в API
-#### Интерфейс содержит:
-- `payment: TPaymentType` - тип оплаты
+- `items: TGoodApi[]` - список товаров
+### TOrderApi = {
+Тип для отправки заказа в API
+- `payment: string` - тип оплаты
 - `email: string` - электронная почта
 - `phone: string` - телефон
 - `address: string` - адрес доставки
 - `total: number` - сумма заказа
 - `items: TIdGoodType[]` - список товаров
-### IAnswerOrderApi
-Описывает ответ, после отправки заказа в API
-#### Интерфейс содержит:
-- `id: string` - id заказа
-- `total: number` - сумма списано
-- `error: string` - текст ошибки, если отправка заказа закончилась неудачей
+### TAnswerOrderApi = {
+Тип для ответа после отправки заказа в API
+- `id?: string` - Id заказа
+- `total?: number` - Сумма списано
+- `error?: string` - Текст ошибки
+### Интерфейсы
+### ILarekAPI
+Интерфейс для класса взаимодействия с API
+- `getGoods(): Promise<TListGoodsApi>;` - получить товары с сервера
+- `sendOrder(order: TOrderApi): Promise<TAnswerOrderApi>;` - отправить заказ на сервер
 ### Классы
 ### LarekAPI
-Класс наследуется от базового класса Api.\
+Класс наследуется от базового класса [Api](#api).\
+Соответствия полей модели данных и API описаны в [настройке соответствия полей](#settings_api).
 Реализует методы для получения номенклатуры товаров и отправки заказа.
 #### Класс содержит:
 - метод `getGoods(): Promise<IGoodApi>` - получить товары с сервера
-- метод `sendOrder(order: IOrderApi): Promise<IAnswerOrderApi>` - отправить товары на сервер
+- метод `sendOrder(order: IOrderApi): Promise<IAnswerOrderApi>` - отправить заказ на сервер
+
+
+swt
+
+
+
 ### Слой "Отображение"
 ### Типы:
 ### TCardGoodStatus
@@ -243,12 +295,12 @@ type TCardGoodStatus = 'basket' | 'free' | 'no_price';
 - `basket: Basket` - объект, обслуживающий представление "Корзина"
 - `order: Order` - объект, обслуживающий представление "Корзина"
 ### Классы
-### Modal
+### Modal<a id="view_modal"></a>
 Базовый класс для показа модальных окон
 #### Класс содержит:
 - свойство `closeButton: HTMLButtonElement` - элемент кнопки для закрытия окна
 - свойство `content: HTMLElement` - содержимое модального окна
-### CardGoodView
+### CardGoodView<a id="view_card"></a>
 Класс для отображения карты товара в каталоге, детальном просмотре и корзине
 #### Класс содержит:
 - свойство `buttonText: string` - надпись на кнопке, если товар в детальном просмотре
@@ -263,7 +315,7 @@ type TCardGoodStatus = 'basket' | 'free' | 'no_price';
 - свойство `basketButton: HTMLButtonElement` - кнопка "В корзину", если карта товара в детальном просмотре
 - свойство `HTMLButtonElement: HTMLButtonElement` - кнопка "Удалить", если карта товара в корзине
 - конструктор `constructor(container: HTMLTemplateElement, protected events: EventEmitter,protected owner: TCardGoodOwner, protected status?: TCardGoodStatus)`
-### BasketView
+### BasketView<a id="view_basket"></a>
 Класс для отображения корзины
 #### Класс содержит:
 - свойство `events: IEvents` - брокер событий
@@ -273,7 +325,7 @@ type TCardGoodStatus = 'basket' | 'free' | 'no_price';
 - свойство `basketList: HTMLElement` - список товаров корзины
 - свойство `totalSum: HTMLElement` - сумма товаров корзины
 - конструктор `constructor(container: HTMLElement, protected events: EventEmitter)`
-### OrderViewOrder
+### OrderViewOrder<a id="view_order"></a>
 Класс для отображения параметров заказа. Первая страница оформления заказа
 #### Класс содержит:
 - свойство `events: IEvents` - брокер событий
@@ -302,7 +354,7 @@ type TCardGoodStatus = 'basket' | 'free' | 'no_price';
 - свойство `events: IEvents` - брокер событий
 - свойство `content: HTMLElement` - контент для вывода в страницу заказа
 - конструктор `constructor(container: HTMLElement, protected events: EventEmitter)`
-### Page
+### Page<a id="view_page"></a>
 Класс для отображения страницы приложения
 #### Класс содержит:
 - свойство `events: IEvents` - брокер событий
@@ -345,6 +397,14 @@ type TCardGoodStatus = 'basket' | 'free' | 'no_price';
 - метод `loadOrder(): Partial<IOrderModel> | null` - читает из локального хранилища данные заказа
 - метод `saveOrder(order: object)` - пишет в локальное хранилище состав данные заказа
 ### Подсистема "Тесты"
+Тесты полезно использовать после изменения основных структур данных или API.\
+Для использования тестов необходимо в файле src/index.ts раскомментировать блок кода после блока импорта:
+```ts
+// Тесты
+import {startTests} from "./test/test";
+startTests();
+throw '';
+```
 ### Интерфейсы
 ### IResult
 Описывает результат тестов
@@ -388,17 +448,17 @@ type TCardGoodStatus = 'basket' | 'free' | 'no_price';
 #### Класс содержит:
 - свойство `testData: IGoodModel[]` - тестовые данные
 - метод `test()` - тест на создание и вывод на страницу
-#### StorageBasketTest
+### StorageBasketTest
 Тест сохранения и загрузки корзины в локальное хранилище
 #### Класс содержит:
 - свойство `testData: IBasketModel` - тестовые данные
 - метод `test()` - тест на сохранения и загрузки корзины в локальное хранилище
-#### StorageOrderTest
+### StorageOrderTest
 Тест сохранения и загрузки параметров заказа в локальное хранилище
 #### Класс содержит:
 - свойство `testData: Partial<IOrderModel>` - тестовые данные
 - метод `test()` - тест на сохранения и загрузки параметров заказа в локальное хранилище
-#### APITest
+### APITest
 Тест загрузки товаров из API
 #### Класс содержит:
 - метод `test()` - загрузки товаров из API

@@ -21,23 +21,23 @@ export function startTests() {
   // 1. Товар
   new GoodTest('Модель "Товары"').test();
 
-  // 2. Заказ
-  new OrderTest('Модель "Заказ"').test();
-
-  // 3. Корзина
+  // 2. Корзина
   new BasketTest('Модель "Корзина"').test();
 
-  // 4. Отображение Товар
-  new GoodViewTest('Отображение "Товар"').test();
+  // 3. Заказ
+  new OrderTest('Модель "Заказ"').test();
 
-  // 5. Отображение "Страница"
-  new PageViewTest('Отображение "Страница"').test();
-
-  // 6. Хранилище Корзина
+  // 4. Хранилище Корзина
   new StorageBasketTest('Хранилище "Корзина"').test();
 
-  // 7. Хранилище Заказ
+  // 5. Хранилище Заказ
   new StorageOrderTest('Хранилище "Заказ"').test();
+
+  // 6. Отображение Товар
+  new GoodViewTest('Отображение "Товар"').test();
+
+  // 7. Отображение "Страница"
+  new PageViewTest('Отображение "Страница"').test();
 
   // 100. API
   new APITest('API').test();

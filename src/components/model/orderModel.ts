@@ -1,61 +1,78 @@
 /**
  * Модуль описывает модель данных "Заказ"
- * @module
  */
-import { IOrderModel, TPaymentType } from "../../types/order";
-import { TIdGoodType } from "../../types/good/model";
+
+import { IOrderModel, TPaymentType } from "../../types/order/model";
 import { IEvents } from "../base/events";
-import { isEmpty } from "../../utils/utils";
 
 /**
  * Класс для заказа
- *
- * @class Order
- *   @property {TPaymentType} payment тип оплаты
- *   @property {number} total сумма заказа
- *   @property {TIdGoodType[]} goods id заказанных товаров
- *   @property {string} email почта
- *   @property {string} phone телефон
- *   @property {string} address адрес
- *  */
-export class OrderModel {
-  protected payment: TPaymentType;    // тип оплаты
-  protected total: number;            // сумма заказа
-  protected goods: TIdGoodType[];     // id заказанных товаров
-  protected email: string;            // почта
-  protected phone: string;            // телефон
-  protected address: string;          // адрес
+ */
+export class OrderModel implements IOrderModel {
 
-  constructor(protected events: IEvents, data: Partial<IOrderModel>) {
-    if (!isEmpty(data)) this.setOrder(data);
+  protected _payment: TPaymentType;    // тип оплаты
+  protected _email: string;            // почта
+  protected _phone: string;            // телефон
+  protected _address: string;          // адрес
+
+  constructor(protected events: IEvents) {
+    this.events = events;
   }
 
-  getOrder(): IOrderModel {
-    return {
-      payment: this.payment,
-      total: this.total,
-      goods: this.goods,
-      email: this.email,
-      phone: this.phone,
-      address: this.address,
-    }
+  /**
+   * Сеттер для типа оплаты
+   */
+  set payment(value: TPaymentType) {
+    this._payment = value;
   }
 
-  setOrder(data: Partial<IOrderModel>): void {
-    if (!isEmpty(data.payment)) this.payment = data.payment;
-    if (!isEmpty(data.total)) this.total = data.total;
-    if (!isEmpty(data.goods)) this.goods = data.goods;
-    if (!isEmpty(data.email)) this.email = data.email;
-    if (!isEmpty(data.phone)) this.phone = data.phone;
-    if (!isEmpty(data.address)) this.address = data.address;
+  /**
+   * Геттер для типа оплаты
+   */
+  get payment() {
+    return this._payment;
   }
 
-  getGoods(): TIdGoodType[] {
-    return this.goods;
+  /**
+   * Сеттер для почты
+   */
+  set email(value: string) {
+    this._email = value;
   }
 
-  setGoods(data: TIdGoodType[]): void {
-    this.goods = data;
+  /**
+   * Геттер для почты
+   */
+  get email() {
+    return this._email;
+  }
+
+  /**
+   * Сеттер для телефона
+   */
+  set phone(value: string) {
+    this._phone = value;
+  }
+
+  /**
+   * Геттер для телефона
+   */
+  get phone():string {
+    return this._phone;
+  }
+
+  /**
+   * Сеттер для адреса
+   */
+  set address(value: string){
+   this._address = value;
+  }
+
+  /**
+   * Геттер для адреса
+   */
+  get address() {
+    return this._address;
   }
 
 }

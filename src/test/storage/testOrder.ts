@@ -4,13 +4,12 @@
 
 import { Test } from "../abstract/test";
 import { LarekStorage } from "../../components/storage/storage";
-import { IOrderModel } from "../../types/order";
-import {isEmpty} from "../../utils/utils";
+import { IOrderModel } from "../../types/order/model";
+import { isEmpty } from "../../utils/utils";
 
 export class StorageOrderTest extends Test {
-  protected testData: Partial<IOrderModel>  = {
+  protected testData: IOrderModel  = {
     payment: 'offline',
-    total: 333,
     email: 'boss@grandfather.ru',
     phone: '+71234567890',
     address: 'На деревню дедушке'
@@ -19,12 +18,12 @@ export class StorageOrderTest extends Test {
   test() {
     const storage = new LarekStorage();
     // Предохранить что было в хранилище
-    const oldOrder: Partial<IOrderModel> = storage.loadOrder();
+    const oldOrder: IOrderModel = storage.loadOrder();
 
     try {
       // 1. Запись и последующее чтение
       storage.saveOrder(this.testData);
-      const data: Partial<IOrderModel> = storage.loadOrder();
+      const data: IOrderModel = storage.loadOrder();
 
       if (!this.compareResult(data)) {
         this.result = {
@@ -47,7 +46,11 @@ export class StorageOrderTest extends Test {
       }
     } finally {
       // Восстановить хранилище
-      if (!isEmpty(oldOrder)) storage.saveOrder(oldOrder);
+      if (isEmpty(oldOrder)) {
+        storage.clearOrder();
+      } else {
+        storage.saveOrder(oldOrder);
+      }
     }
 
     this.consoleResult();
