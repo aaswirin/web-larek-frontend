@@ -30,6 +30,8 @@ export const settings = {
       ['email', 'email'],
       ['phone', 'phone'],
       ['address', 'address'],
+      ['total', 'total'],
+      ['items', 'items'],
     ],
   },
   // События
@@ -48,7 +50,8 @@ export const settings = {
     // Заказ
     order: {
       makeOrder: 'order:make',                 // Событие "Сделать заказ"
-      changeOrder: 'order:change',             // Событие "Изменился заказ"
+      changeOrder: 'order:changePay',          // Событие "Перейти на вторую страницу заказа"
+      changeContacts: 'order:changeContacts',  // Событие "Отправить заказ"
     },
     // Страница
     page: {
@@ -119,7 +122,7 @@ export const settings = {
       templatePageContacts: '#contacts',       // Страница для ввода Почты и Телефона
       inputEMail: '[name="email"]',            // Поле ввода "Почта"
       inputPhone: '[name="phone"]',            // Поле ввода "Телефон"
-      buttonContacts: '.contacts__button',     // Кнопка "Оплатить"
+      buttonContacts: '.contacts__button',          // Кнопка "Оплатить"
       // Третья страница
       templatePageSuccess: '#success',         // Заключительная страница
       totalSum: '.order-success__description', // Сумма заказа

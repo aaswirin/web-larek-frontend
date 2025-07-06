@@ -16,7 +16,7 @@ import {LarekAPI} from "../api/larekAPI";
 import {LarekStorage} from "../storage/storage";
 import {showError} from "../base/error";
 import {OrderModel} from "../model/orderModel";
-import {OrderViewOrder} from "./order";
+//import {OrderViewOrder} from "./order_pay";
 import {IGoodView} from "../../types/good/view";
 import {IOrderView} from "../../types/order/view";
 
@@ -29,7 +29,7 @@ export interface IWebLarek {
   orderModel: OrderModel;
   page: Page;
   basket: Basket;
-  order: OrderViewOrder;
+  //order: OrderViewOrder;
 }
 
 /**
@@ -62,7 +62,7 @@ export class WebLarek {
   // Oтображения
   protected page: Page;
   protected basket: Basket;
-  protected order: OrderViewOrder;
+  //protected order: OrderViewOrder;
 
   constructor(components: Partial<IWebLarek>) {
     this.events = components.events;
@@ -73,7 +73,7 @@ export class WebLarek {
     this.orderModel =  components.orderModel;
     this.page = components.page;
     this.basket = components.basket;
-    this.order = components.order;
+    //this.order = components.order;
   }
 
   initialize(): void {

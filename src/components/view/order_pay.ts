@@ -1,5 +1,5 @@
 /**
- * Модуль описывает представление "Заказ"
+ * Модуль описывает представление "Заказ. Первая страница"
  */
 
 import { Component } from "../base/component";
@@ -13,17 +13,11 @@ import { priceToString } from "../function/function";
 /**
  * Класс для отображения первой страницы оформления заказа
  */
-export class OrderViewOrder extends Component<IOrderView> {
+export class OrderViewPay extends Component<IOrderView> {
   protected buttonCard: HTMLButtonElement;         // Кнопка "Онлайн"
   protected buttonCash: HTMLButtonElement;         // Кнопка "При получении"
   protected inputAddress: HTMLInputElement;        // Поле ввода "Адрес"
   protected buttonOrder: HTMLButtonElement;        // Кнопка "Далее"
-
-  //protected inputEMail: HTMLInputElement;          // Поле ввода "Почта"
-  //protected inputPhone: HTMLInputElement;          // Поле ввода "Телефон"
-  //protected buttonContacts: HTMLButtonElement;     // Кнопка "Оплатить"
-  //protected buttonSuccess: HTMLButtonElement;      // Кнопка "За новыми покупками!"
-  //protected elementTotal: HTMLParagraphElement;    // Элемент для вывода суммы
 
   constructor(container: HTMLElement, protected events: IEvents) {
     super(container);
@@ -35,26 +29,26 @@ export class OrderViewOrder extends Component<IOrderView> {
 
     // Слушатели
     this.buttonCard.addEventListener('click', () =>
-      this.render({payment: 'online'}));
+        this.render({payment: 'online'}));
+
     this.buttonCash.addEventListener('click', () =>
-      this.render({payment: 'offline'}));
+        this.render({payment: 'offline'}));
 
-    // Доделать! Кнопку открыть только после валидации
-    this.setDisabled(this.buttonOrder, false);
-
-    /*
-    const inputEMail = container.querySelector(settings.elements.order.inputEMail);
-    const buttonSuccess = container.querySelector(settings.elements.order.buttonSuccess);
-
-      container.addEventListener('submit', (event) => {
+    // Кнопка "Далее"
+    container.addEventListener('submit', (event) => {
         event.preventDefault();
 
         this.events.emit(settings.events.order.changeOrder, {
           payment: this.buttonCard.classList.contains(settings.elements.order.buttonClassActive) ? 'online' : 'offline',
           address: this.inputAddress.value,
         });
-        //
+
       });
+
+    // Доделать! Кнопку открыть только после валидации
+    this.setDisabled(this.buttonOrder, false);
+
+    /*
 
      */
     /*} else if (!isEmpty(inputEMail)) {     // Это вторая страница
@@ -98,16 +92,6 @@ export class OrderViewOrder extends Component<IOrderView> {
   set total(value: number) {
     const sum: string = priceToString(value)
     this.setText(this.elementTotal, this.showPage === 'success' ? `Списано ${sum}` : sum);
-  }
-
-  set email(value: string) {
-    if (isEmpty(this.inputEMail)) return;
-    this.inputEMail.value = value;
-  }
-
-  set phone(value: string) {
-    if (isEmpty(this.inputPhone)) return;
-    this.inputPhone.value = value;
   }
 */
   set address(value: string) {

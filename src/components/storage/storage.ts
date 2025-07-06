@@ -55,14 +55,14 @@ export class LarekStorage implements IStorage {
   }
 
   /**
-   * Записать заказ
+   * Прочитать заказ
    */
   loadOrder(): IOrderModel {
     return JSON.parse(localStorage.getItem(LarekStorage.keyOrder)) as IOrderModel;
   }
 
   /**
-   * Прочитать заказ
+   * записать заказ
    */
   saveOrder(order: IOrderModel) {
     localStorage.setItem(LarekStorage.keyOrder, JSON.stringify(order));

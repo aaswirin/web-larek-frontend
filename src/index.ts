@@ -20,8 +20,10 @@ import {OrderModel} from "./components/model/orderModel";
 import {TPaymentType} from "./types/order/model";
 import {closeModal, priceToString, showModal} from "./components/function/function";
 import {Basket} from "./components/view/basket";
-import {OrderViewOrder} from "./components/view/order";
+import {OrderViewPay} from "./components/view/order_pay";
+import {OrderViewContacts} from './components/view/order_contacts';
 import {IOrderView} from "./types/order/view";
+import { TOrderApi } from "./types/api";
 
 /*
 // Тесты
@@ -29,18 +31,6 @@ import {startTests} from "./test/test";
 startTests();
 throw '';
 */
-
-// Всё нужное
-let displayedModal = false;                    // Признак активности модального окна
-const events = new EventEmitter();                     // Брокер событий;
-const storage = new LarekStorage();                    // Хранилище
-const apiLarek = new LarekAPI(API_URL);                // Api
-const goodsModel = new GoodsModel(events);             // Список товаров
-const basketModel = new BasketModel(events);           // Корзина
-const orderModel = new OrderModel(events);             // Параметры заказа
-
-// Страница
-const page = new Page(ensureElement(settings.elements.page.pageContent) as HTMLElement, events);
 
 // Заготовки
 // Под карту
@@ -54,6 +44,24 @@ const templateBasket = ensureElement<HTMLTemplateElement>(settings.elements.card
 const templateBasketList = ensureElement<HTMLTemplateElement>(settings.elements.basket.template);
 // Первая страница заказа
 const templatePageOrder = ensureElement<HTMLTemplateElement>(settings.elements.order.templatePageOrder);
+// Вторая страница заказа
+const templatePageContacts = ensureElement<HTMLTemplateElement>(settings.elements.order.templatePageContacts);
+
+// Всё нужное
+let displayedModal = false;                    // Признак активности модального окна
+const events = new EventEmitter();                     // Брокер событий;
+const storage = new LarekStorage();                    // Хранилище
+const apiLarek = new LarekAPI(API_URL);                // Api
+// Модели
+const goodsModel = new GoodsModel(events);             // Список товаров
+const basketModel = new BasketModel(events);           // Корзина
+const orderModel = new OrderModel(events);             // Параметры заказа
+// Отображения
+const orderPay = new OrderViewPay(cloneTemplate(templatePageOrder),events);               // Первая страница заказа
+const orderContacts = new OrderViewContacts(cloneTemplate(templatePageContacts),events);  // Вторая страница заказа
+
+// Страница
+const page = new Page(ensureElement(settings.elements.page.pageContent) as HTMLElement, events);
 
 // Модальное окно
 const windowModal = ensureElement<HTMLElement>(settings.elements.modal.modalContainer);
@@ -63,7 +71,7 @@ const contentModal = ensureElement<HTMLElement>(settings.elements.modal.modalCon
 /**
  * Перестроить корзину
  */
-export function rebuildBasket(): void {
+function rebuildBasket(): void {
   let count: number = 0;
   let totalSum: number = 0;
 
@@ -102,14 +110,7 @@ apiLarek.getGoods()
       settings.api.goods.forEach((link) => {
         good[link[0]] = item[link[1]];
       });
-      /*const good: TGood = {
-        id: item.id,
-        description: item.description,
-        image: item.image,
-        title: item.title,
-        category: item.category as TCategoryType,
-        price: item.price,
-      }*/
+
       listGoods.set(good.id, good as TGood);
     })
     goodsModel.goods = listGoods;
@@ -225,17 +226,73 @@ events.on(settings.events.basket.goodDelete,(data: Partial<TGood>) => {
 
 // Сообщение -> Клик на кнопке "Оформить" в корзине
 events.on(settings.events.order.makeOrder,() => {
-  const orderView = new OrderViewOrder(cloneTemplate(templatePageOrder), events).render(orderModel as Partial<IOrderView>);
+  const orderView = orderPay.render({
+    payment: orderModel.payment,
+    address: orderModel.address,
+  });
   contentModal.replaceChildren(orderView);
   displayedModal = showModal(displayedModal, windowModal);
 });
 
 // Сообщение -> Клик на кнопке "Далее" в заказе
-events.on(settings.events.order.changeOrder,() => {
-  const orderView = new OrderViewOrder(cloneTemplate(templatePageOrder), events).render(orderModel as Partial<IOrderView>);
-  contentModal.replaceChildren(orderView);
-  displayedModal = showModal(displayedModal, windowModal);
+events.on(settings.events.order.changeOrder,(data: Partial<IOrderView> ) => {
+  orderModel.address = data.address;
+  orderModel.payment = data.payment;
+
+  const contactsView = orderContacts.render({
+    email: orderModel.email,
+    phone: orderModel.phone,
+  });
+
+  contentModal.replaceChildren(contactsView);
 });
+
+// Сообщение -> Клик на кнопке "Оплатить" в заказе
+events.on(settings.events.order.changeContacts,(data: Partial<IOrderView> ) => {
+  orderModel.email = data.email;
+  orderModel.phone = data.phone;
+
+  // ... и отправить заказ
+  const totalSum = basketModel.calcTotal(goodsModel);
+  /* Переписать из своей структуры в API
+     Структуры могут не совпадать
+     См. настройку settings.api.order
+   */
+  const orderSend: any  = {};    // Для отправки в API
+  const orderStorage: any  = {}; // Для сохранения в локальное хранилище
+  settings.api.order.forEach((item) => {
+    const keyModel = item[0];
+    const keyApi = item[1];
+    if (keyModel === 'total') {
+      orderSend[keyApi] = totalSum;
+    } else if (keyModel === 'items') {
+      orderSend[keyApi] = Array.from(basketModel.goods);
+    } else {
+      const value = orderModel[keyModel as keyof typeof orderModel];
+      orderSend[keyApi] = value;
+      orderStorage[keyApi] = value;
+    }
+  });
+
+  // Сохранить в локальное хранилище
+  storage.saveOrder(orderStorage);
+  console.log(orderSend);
+
+
+  /*
+  const orderSend: IOrderApi = {
+    payment: orderModel.payment,  // Тип оплаты
+    email: orderModel.email,      // Электронная почта
+    phone: orderModel.phone,      // Телефон
+    address: orderModel.address,  // Адрес доставки
+    total: totalSum,         // Сумма заказа
+    items: basketModel.goods,      // Список товаров
+  };
+*/
+  //const contactsView = orderContacts.render(orderModel as Partial<IOrderView>);
+  //contentModal.replaceChildren(contactsView);
+});
+
 
 //events.on(settings.events.order.changeOrder,() => {
 

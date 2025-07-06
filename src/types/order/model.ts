@@ -12,7 +12,7 @@ export type TPaymentType = 'offline' | 'online';
  */
 export interface IOrderModel {
   payment: TPaymentType;   // тип оплаты
+  address: string;         // адрес
   email: string;           // почта
   phone: string;           // телефон
-  address: string;         // адрес
 }
