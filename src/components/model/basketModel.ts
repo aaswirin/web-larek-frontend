@@ -7,19 +7,19 @@ import { isEmpty } from "../../utils/utils";
 import { IEvents } from "../base/events";
 import { settings } from "../../utils/constants";
 import { TIdGoodType } from "../../types";
-import {IGoodsModel, TGood} from "../../types/good/model";
+import { IGoodsModel } from "../../types/good/model";
 
 /**
  * Класс для корзины
  */
 export class BasketModel implements IBasketModel {
-  protected events: IEvents;            // Список товаров
-  protected _editDate: Date | null;     // Дата и время последнего изменения корзины
-  protected _goods: Set<TIdGoodType>;   // Список товаров в корзине
+  protected events: IEvents;                          // Список товаров
+  protected _editDate: Date | null;                   // Дата и время последнего изменения корзины
+  protected _goods: Map<TIdGoodType, number>;         // Список товаров в корзине
 
   constructor(events: IEvents) {
     this.events = events;
-    this._goods = new Set<TIdGoodType>();
+    this._goods = new Map<TIdGoodType, number>();
   }
 
   /**
@@ -53,17 +53,17 @@ export class BasketModel implements IBasketModel {
   /**
    * Сеттер для списка товаров
    */
-  get goods(): Set<TIdGoodType> {
-    return new Set(this._goods);
+  get goods(): Map<TIdGoodType, number> {
+    return new Map(this._goods);
   }
 
   /**
    * Геттер для списка товаров
    */
-  set goods(data: Set<TIdGoodType> | null) {
+  set goods(data: Map<TIdGoodType, number> | null) {
     this.clear();
     if (!isEmpty(data)) {
-      this._goods = new Set<TIdGoodType>(data);
+      this._goods = new Map<TIdGoodType, number>(data);
     }
 
     this.events.emit(settings.events.basket.changeBasket);
@@ -73,9 +73,10 @@ export class BasketModel implements IBasketModel {
    * Добавить товар в корзину
    */
   addGood(id: TIdGoodType): void {
-    this._goods.add(id);
+    // Если есть, то просто увеличить количество
+    const count = this.isBasket(id) ? this._goods.get(id) + 1 : 1;
+    this._goods.set(id, count);
     this.edit();
-
     this.events.emit(settings.events.basket.changeBasket);
   }
 
@@ -108,8 +109,8 @@ export class BasketModel implements IBasketModel {
    */
   calcTotal(Goods: IGoodsModel): number {
     let total = 0;
-    this._goods.forEach(item => {
-        total += Goods.getGood(item).price;
+    this._goods.forEach((value, key) => {
+        total += Goods.getGood(key).price * value;
       }
     )
     return total;

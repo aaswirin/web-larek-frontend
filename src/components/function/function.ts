@@ -2,21 +2,18 @@
  * Модуль для функций
  */
 
-import {cloneTemplate, isEmpty} from "../../utils/utils";
-import {settings} from "../../utils/constants";
-import {CardGood} from "../view/cardGood";
-import {IBasketModel} from "../../types/basket/model";
-import {IGoodsModel} from "../../types/good/model";
+import { isEmpty } from "../../utils/utils";
 
 /**
- * Падежометр для цены в синапсах
+ * Падежометр для чисел прописью в синапсах, штуках и т.д.
+ * Настройки см. в settings.case
  * ... надо будет в тугриках, сделаем и в тугриках
  */
-export function priceToString(value: number | null): string {
+export function priceToString(choice: Map<number, string>, value: number | null): string {
   let stringPrice: string;
 
   if (isEmpty(value)) {
-    stringPrice = 'Бесценно';
+    stringPrice = choice.get(0);
   } else {
     stringPrice = value.toString();
     // Разбить на разряды
@@ -24,39 +21,14 @@ export function priceToString(value: number | null): string {
 
     // Падежометр
     const remains:number = value % 10;
-    let suffix: string;
-    if (value > 10 && value < 15) suffix = 'ов'
-    else if (remains === 1) suffix = ''
-    else if (remains > 1 && remains < 5) suffix = 'а'
-    else suffix = 'ов';
+    let text: string;
+    if (value > 10 && value < 15)        text = choice.get(3)
+    else if (remains === 1)              text = choice.get(1)
+    else if (remains > 1 && remains < 5) text = choice.get(2)
+    else                                 text = choice.get(3);
 
-    stringPrice = `${stringPrice} синапс${suffix}`;
+    stringPrice = `${stringPrice} ${text}`;
   }
 
   return stringPrice;
-}
-
-/**
- *  Показать модальное окно
- */
-export function showModal(displayedModal: boolean, windowModal: HTMLElement): boolean {
-  if (displayedModal) return  displayedModal;
-
-  displayedModal = true;
-  windowModal.classList.add(settings.elements.modal.modalActive);
-
-  return  displayedModal;
-}
-
-/**
- *  Скрыть модальное окно
- */
-export function closeModal(displayedModal: boolean, windowModal: HTMLElement, contentModal: HTMLElement): boolean {
-  if (!displayedModal) return  displayedModal;
-
-  displayedModal = false;
-  windowModal.classList.remove(settings.elements.modal.modalActive);
-  contentModal.replaceChildren('');
-
-  return  displayedModal;
 }

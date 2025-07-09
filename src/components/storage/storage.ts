@@ -20,7 +20,7 @@ export class LarekStorage implements IStorage {
 
   /**
    * Прочитать корзину
-   * !!! JSON.parse не умеет работать с Set
+   * !!! JSON.parse не умеет работать с Map
    */
   loadBasket(): Partial<IBasketModel> | null {
     const saveBasket = JSON.parse(localStorage.getItem(LarekStorage.keyBasket));
@@ -30,14 +30,14 @@ export class LarekStorage implements IStorage {
     } else {
       return {
         editDate: saveBasket.editDate,
-        goods: new Set(saveBasket.goods),
+        goods: new Map(saveBasket.goods),
       };
     }
   }
 
   /**
    * Записать корзину
-   !!! JSON.stringify не умеет работать с Set
+   !!! JSON.stringify не умеет работать с Map
    */
   saveBasket(basket: Partial<IBasketModel>) {
     const saveBasket = {

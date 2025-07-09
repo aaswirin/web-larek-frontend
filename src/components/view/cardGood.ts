@@ -8,7 +8,7 @@ import { IEvents } from "../base/events";
 import { CDN_URL, settings } from "../../utils/constants";
 import { IGoodView } from "../../types/good/view"
 import { TIdGoodType } from "../../types";
-import {closeModal, priceToString} from "../function/function";
+import { priceToString } from "../function/function";
 
 /**
  * Класс для отображения карты товара
@@ -23,7 +23,7 @@ export class CardGood extends Component<IGoodView> {
   protected basketDelete: HTMLButtonElement;          // Кнопка "Удалить", если карта товара в корзине
   protected goodId: TIdGoodType;                      // Id товара
 
-  constructor(container: HTMLTemplateElement, protected events: IEvents) {
+  constructor(container: HTMLElement, protected events: IEvents) {
     super(container);
 
     this.elementCategory = container.querySelector(settings.elements.card.category) as HTMLElement;
@@ -50,19 +50,6 @@ export class CardGood extends Component<IGoodView> {
       this.basketDelete.addEventListener('click', () =>
         this.events.emit(settings.events.basket.goodDelete, {id: this.goodId}));
     }
-
-
-   //ensureElement(settings.elements.modal.basketButton, windowModal)
-   //   .addEventListener('click', () => {
-   //    displayedModal = closeModal(displayedModal, windowModal, contentModal)
-   //  });
-  }
-
-  /**
-   * Сеттер для номера карты
-   */
-  set number(value: number) {
-    this.setText(this.elementNumber, value);
   }
 
   /**
@@ -70,7 +57,7 @@ export class CardGood extends Component<IGoodView> {
    */
   set category(value: string) {
     this.setText(this.elementCategory, value);
-    // Удалить чё было и добавить нужный
+    // Удалить что было и добавить нужный
     settings.elements.card.catClass.forEach((classCategory, key) => {
       if (key === value) {
         this.toggleClass(this.elementCategory, classCategory, true);
@@ -105,7 +92,7 @@ export class CardGood extends Component<IGoodView> {
    * Сеттер для номера цены
    */
   set price(value: number | null) {
-    this.setText(this.elementPrice, priceToString(value));
+    this.setText(this.elementPrice, priceToString(settings.case.synapse, value));
   }
 
   /**

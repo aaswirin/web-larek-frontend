@@ -38,7 +38,7 @@ export class PageViewTest extends Test {
         });
 
       const events = new EventEmitter();                // Брокер событий
-      const page = new Page(ensureElement(settings.elements.page.pageContent) as HTMLElement, events);
+      const page = new Page(ensureElement(settings.elements.page.pageContent) as HTMLElement);
       const goodTemplate = ensureElement(settings.elements.card.templateCatalog) as HTMLTemplateElement;
 
       const cards: HTMLElement[] = [];

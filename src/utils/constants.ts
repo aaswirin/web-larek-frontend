@@ -1,5 +1,6 @@
-import {TCategoryType} from "../types";
-
+/**
+ * Настройки
+ */
 export const API_URL = `${process.env.API_ORIGIN}/api/weblarek`;
 export const CDN_URL = `${process.env.API_ORIGIN}/content/weblarek`;
 
@@ -129,4 +130,19 @@ export const settings = {
       buttonSuccess: '.order-success__close',  // Кнопка "За новыми покупками!"
     },
   },
+  // Падежометр
+  case: {
+    synapse: new Map([  // Синапс
+      [0, "Бесценно"],
+      [1, "синапс"],
+      [2, "синапса"],
+      [3, "синапсов"],
+    ]),
+    piece: new Map([    // Штука
+      [0, "Нет"],
+      [1, "штука"],
+      [2, "штуки"],
+      [3, "штук"],
+    ]),
+  }
 };

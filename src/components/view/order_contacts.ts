@@ -5,10 +5,8 @@
 import { Component } from "../base/component";
 import { settings } from "../../utils/constants";
 import { IEvents } from "../base/events";
-import { TPaymentType } from "../../types/order/model";
-import { isEmpty, ensureElement } from "../../utils/utils";
+import { ensureElement } from "../../utils/utils";
 import { IOrderView } from "../../types/order/view";
-import { priceToString } from "../function/function";
 
 /**
  * Класс для отображения второй страницы оформления заказа

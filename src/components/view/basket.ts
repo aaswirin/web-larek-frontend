@@ -3,10 +3,9 @@
  */
 
 import { Component } from "../base/component";
-import {cloneTemplate, ensureElement} from "../../utils/utils";
+import { ensureElement } from "../../utils/utils";
 import { IEvents } from "../base/events";
 import { settings } from "../../utils/constants";
-import {CardGood} from "./cardGood";
 
 /**
  * Класс для отображения корзины

@@ -10,7 +10,7 @@ import { IGoodsModel, TGood } from "../good/model";
  */
 export interface IBasketModel {
   editDate: Date;
-  goods: Set<TIdGoodType>;
+  goods: Map<TIdGoodType, number>;
   addGood(id: TIdGoodType): void;
   deleteGood(id: TIdGoodType): void;
   getCount(): number;

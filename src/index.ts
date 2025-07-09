@@ -3,27 +3,24 @@
  */
 
 import './scss/styles.scss';
-import {API_URL, settings} from "./utils/constants";
+import { API_URL, settings } from "./utils/constants";
 import { LarekAPI } from "./components/api/larekAPI";
 import { EventEmitter } from "./components/base/events";
 import { GoodsModel } from "./components/model/goodsModel";
 import { LarekStorage } from "./components/storage/storage";
-import {IGoodsModel, TGood, TListGoods} from "./types/good/model";
+import { TGood, TListGoods } from "./types/good/model";
 import { showError } from "./components/base/error";
-import {TCategoryType, TIdGoodType} from "./types";
-import {CardGood} from "./components/view/cardGood";
-import {cloneTemplate, ensureElement, isEmpty} from "./utils/utils";
-import {Page} from "./components/view/page";
-import {BasketModel} from "./components/model/basketModel";
-import {IBasketModel} from "./types/basket/model";
-import {OrderModel} from "./components/model/orderModel";
-import {TPaymentType} from "./types/order/model";
-import {closeModal, priceToString, showModal} from "./components/function/function";
-import {Basket} from "./components/view/basket";
-import {OrderViewPay} from "./components/view/order_pay";
-import {OrderViewContacts} from './components/view/order_contacts';
-import {IOrderView} from "./types/order/view";
-import { TOrderApi } from "./types/api";
+import { TIdGoodType } from "./types";
+import { CardGood } from "./components/view/cardGood";
+import { cloneTemplate, ensureElement, isEmpty } from "./utils/utils";
+import { Page } from "./components/view/page";
+import { BasketModel } from "./components/model/basketModel";
+import { OrderModel } from "./components/model/orderModel";
+import { priceToString } from "./components/function/function";
+import { Basket } from "./components/view/basket";
+import { OrderViewPay } from "./components/view/order_pay";
+import { OrderViewContacts } from './components/view/order_contacts';
+import { IOrderView } from "./types/order/view";
 
 /*
 // Тесты
@@ -35,20 +32,21 @@ throw '';
 // Заготовки
 // Под карту
 // 1. В каталоге
-const templateCatalog = ensureElement<HTMLTemplateElement>(settings.elements.card.templateCatalog) as HTMLTemplateElement;
+const templateCatalog = ensureElement<HTMLTemplateElement>(settings.elements.card.templateCatalog);
 // 2. В просмотре товара
-const templateDetails = ensureElement<HTMLTemplateElement>(settings.elements.card.templateDetails) as HTMLTemplateElement;
+const templateDetails = ensureElement<HTMLTemplateElement>(settings.elements.card.templateDetails);
 // 3. В корзине
-const templateBasket = ensureElement<HTMLTemplateElement>(settings.elements.card.templateBasket) as HTMLTemplateElement;
+const templateBasket = ensureElement<HTMLTemplateElement>(settings.elements.card.templateBasket);
 // Корзина
-const templateBasketList = ensureElement<HTMLTemplateElement>(settings.elements.basket.template);
+const cloneBasketList = cloneTemplate(ensureElement<HTMLTemplateElement>(settings.elements.basket.template));
 // Первая страница заказа
-const templatePageOrder = ensureElement<HTMLTemplateElement>(settings.elements.order.templatePageOrder);
+const clonePageOrder = cloneTemplate(ensureElement<HTMLTemplateElement>(settings.elements.order.templatePageOrder));
 // Вторая страница заказа
-const templatePageContacts = ensureElement<HTMLTemplateElement>(settings.elements.order.templatePageContacts);
+const clonePageContacts = cloneTemplate(ensureElement<HTMLTemplateElement>(settings.elements.order.templatePageContacts));
+// Третья страница заказа
+const clonePageSuccess = cloneTemplate(ensureElement<HTMLTemplateElement>(settings.elements.order.templatePageSuccess));
 
 // Всё нужное
-let displayedModal = false;                    // Признак активности модального окна
 const events = new EventEmitter();                     // Брокер событий;
 const storage = new LarekStorage();                    // Хранилище
 const apiLarek = new LarekAPI(API_URL);                // Api
@@ -57,15 +55,11 @@ const goodsModel = new GoodsModel(events);             // Список това�
 const basketModel = new BasketModel(events);           // Корзина
 const orderModel = new OrderModel(events);             // Параметры заказа
 // Отображения
-const orderPay = new OrderViewPay(cloneTemplate(templatePageOrder),events);               // Первая страница заказа
-const orderContacts = new OrderViewContacts(cloneTemplate(templatePageContacts),events);  // Вторая страница заказа
+const orderPay = new OrderViewPay(clonePageOrder, events);               // Первая страница заказа
+const orderContacts = new OrderViewContacts(clonePageContacts, events);  // Вторая страница заказа
 
 // Страница
-const page = new Page(ensureElement(settings.elements.page.pageContent) as HTMLElement, events);
-
-// Модальное окно
-const windowModal = ensureElement<HTMLElement>(settings.elements.modal.modalContainer);
-const contentModal = ensureElement<HTMLElement>(settings.elements.modal.modalContent, windowModal);
+const page = new Page(ensureElement(settings.elements.page.pageContent) as HTMLElement);
 
 // Функции
 /**
@@ -75,26 +69,29 @@ function rebuildBasket(): void {
   let count: number = 0;
   let totalSum: number = 0;
 
-  const goodsHTMLArray = Array.from(basketModel.goods).map(idGood => {
-    const good = goodsModel.getGood(idGood);
+  const goodsHTMLArray = Array.from(basketModel.goods).map(item => {
+    const good = goodsModel.getGood(item[0]);
+    const countInBasket = item[1];  // Количество в корзине
+    const sum = good.price * countInBasket;
     count++;
 
-    totalSum = totalSum + good.price;
+    totalSum = totalSum + sum; // Цена на количество
     return new CardGood(cloneTemplate(templateBasket), events)
       .render({
         number: count,
         id: good.id,
-        title: good.title,
-        price: good.price,
+        // Название (сколько штук)
+        title: `${good.title} (${priceToString(settings.case.piece, countInBasket)})`,
+        price: sum,
       });
-    });
-  const basketView = new Basket(cloneTemplate(templateBasketList), events).
+  });
+  const basketView = new Basket(cloneBasketList, events).
     render({
       basketList: goodsHTMLArray,
-      totalSum: priceToString(totalSum),
+      totalSum: priceToString(settings.case.synapse, totalSum),
     });
 
-  contentModal.replaceChildren(basketView);
+  page.contentModal.replaceChildren(basketView);
 }
 
 // Загрузить карты из API
@@ -139,63 +136,66 @@ if (settings.storage.active) {
 
 // Слушатели
 // Для модального окна, кнопка закрытия
-ensureElement(settings.elements.modal.closeButton, windowModal).addEventListener('click', () =>
-  displayedModal = closeModal(displayedModal, windowModal, contentModal)
-);
+ensureElement(settings.elements.modal.closeButton, page.windowModal).addEventListener('click', () =>
+  page.closeModal());
 
 // Показ корзины
-ensureElement(settings.elements.page.basketButton,)
-  .addEventListener('click', () => events.emit(settings.events.page.showBasket));
+ensureElement(settings.elements.page.basketButton).addEventListener('click', () =>
+  events.emit(settings.events.page.showBasket));
+
+// События
+// Кнопка "За новыми покупками"
+ensureElement(settings.elements.order.buttonSuccess, clonePageSuccess).addEventListener('click', () =>
+  page.closeModal());
+
+// Для снятия открытого окна по клику вне окна
+page.windowModal.addEventListener('mouseup', (event: MouseEvent) => {
+  if ((event.target as HTMLElement).closest(settings.elements.modal.modalContent) === null) page.closeModal();
+});
 
 // Обработка сообщений
 // Сообщение -> Изменение списка товаров в каталоге
 events.on(settings.events.card.goodsAllChange, () => {
   const goodsHTMLArray = Array.from(goodsModel.goods).map(item => {
-      return new CardGood(cloneTemplate(templateCatalog), events).render(item[1] as Partial<TGood>)
-    }
-  )
+    return new CardGood(cloneTemplate(templateCatalog), events).render(item[1] as Partial<TGood>)
+  });
 
   page.render({
-      goodsList: goodsHTMLArray,
-      basketCount: basketModel.getCount(),
-    }
-  )
+    goodsList: goodsHTMLArray,
+    basketCount: basketModel.getCount(),
+  });
 });
 
 // Сообщение -> Клик на карте
 events.on(settings.events.card.cardDetail, (data: Partial<TGood>) => {
   // Показ карты товара
   const good = goodsModel.getGood(data.id);
-  const isBasket = basketModel.isBasket(data.id);
 
   let captionButton = 'Добавить в корзину';
   let disabledButton = false;
-  if (isBasket) captionButton = 'Удалить из корзины';
-  else if (isEmpty(good.price)) {
+  if (isEmpty(good.price)) {
     captionButton = 'Нет цены';
     disabledButton = true;
   }
 
   const card=  new CardGood(cloneTemplate(templateDetails), events)
     .render({...good, buttonText: captionButton, buttonDisabled: disabledButton});
-  contentModal.replaceChildren(card);
-  displayedModal = showModal(displayedModal, windowModal);
-})
+  page.contentModal.replaceChildren(card);
+  page.showModal();
+});
 
-// Сообщение -> Клик на кнопке в карте товара "Добавить"/"Удалить" в корзину
+// Сообщение -> Клик на кнопке в карте товара "Добавить в корзину"
 events.on(settings.events.card.cardBasket,  (data: Partial<TGood>) => {
-  if (!isEmpty(data)) {
-    if (basketModel.isBasket(data.id)) basketModel.deleteGood(data.id); // Товар уже в корзине
-    else basketModel.addGood(data.id);                               // Товара нет в корзине
+  if (isEmpty(data)) return;
+  basketModel.addGood(data.id);
 
-    page.render({
-        basketCount: basketModel.getCount(),
-    });
-  }
-})
+  page.render({
+      basketCount: basketModel.getCount(),
+  });
+});
 
 // Сообщение -> Изменена корзина
-events.on(settings.events.basket.changeBasket,  (data: Partial<TGood>) => {
+events.on(settings.events.basket.changeBasket,  () => {
   // Сохраниться в локальное хранилище
   if (settings.storage.active) {
     storage.saveBasket(
@@ -207,15 +207,14 @@ events.on(settings.events.basket.changeBasket,  (data: Partial<TGood>) => {
   }
   page.render({
     basketCount: basketModel.getCount(),
-  })
-
-})
+  });
+});
 
 // Сообщение -> Клик на кнопке "Покажи мне корзину"
 events.on(settings.events.page.showBasket,() => {
   // Показ корзины
   rebuildBasket();
-  displayedModal = showModal(displayedModal, windowModal);
+  page.showModal();
 });
 
 // Сообщение -> Клик на кнопке "Удалить" в корзине
@@ -230,8 +229,8 @@ events.on(settings.events.order.makeOrder,() => {
     payment: orderModel.payment,
     address: orderModel.address,
   });
-  contentModal.replaceChildren(orderView);
-  displayedModal = showModal(displayedModal, windowModal);
+  page.contentModal.replaceChildren(orderView);
+  page.showModal();
 });
 
 // Сообщение -> Клик на кнопке "Далее" в заказе
@@ -244,108 +243,62 @@ events.on(settings.events.order.changeOrder,(data: Partial<IOrderView> ) => {
     phone: orderModel.phone,
   });
 
-  contentModal.replaceChildren(contactsView);
+  page.contentModal.replaceChildren(contactsView);
 });
 
 // Сообщение -> Клик на кнопке "Оплатить" в заказе
 events.on(settings.events.order.changeContacts,(data: Partial<IOrderView> ) => {
+  console.log(settings.events.order.changeContacts);
   orderModel.email = data.email;
   orderModel.phone = data.phone;
 
-  // ... и отправить заказ
   const totalSum = basketModel.calcTotal(goodsModel);
   /* Переписать из своей структуры в API
      Структуры могут не совпадать
      См. настройку settings.api.order
    */
-  const orderSend: any  = {};    // Для отправки в API
-  const orderStorage: any  = {}; // Для сохранения в локальное хранилище
+  const orderSend: any = {};    // Для отправки в API
+  const orderStorage: any = {}; // Для сохранения в локальное хранилище
   settings.api.order.forEach((item) => {
     const keyModel = item[0];
     const keyApi = item[1];
     if (keyModel === 'total') {
       orderSend[keyApi] = totalSum;
     } else if (keyModel === 'items') {
-      orderSend[keyApi] = Array.from(basketModel.goods);
+      orderSend[keyApi] = [];
+
+      // Развалить количество на отдельные строки
+      basketModel.goods.forEach((count, id) => {
+        for (let num = 0; num < count; num++) {
+          orderSend[keyApi].push(id)
+        }
+      });
     } else {
       const value = orderModel[keyModel as keyof typeof orderModel];
       orderSend[keyApi] = value;
-      orderStorage[keyApi] = value;
+      if (settings.storage.active) orderStorage[keyApi] = value;
     }
   });
 
   // Сохранить в локальное хранилище
-  storage.saveOrder(orderStorage);
-  console.log(orderSend);
+  if (settings.storage.active) storage.saveOrder(orderStorage);
 
+  // ... и отправить заказ
+  apiLarek.sendOrder(orderSend)
+    .then(data => {
+      if (!isEmpty(data.error)) {  // Что-то пошло не так
+        showError('Отправка заказа', data.error);
+      } else {
+        ensureElement(settings.elements.order.totalSum, clonePageSuccess).textContent =
+          `Списано ${priceToString(settings.case.synapse, data.total)}`;
 
-  /*
-  const orderSend: IOrderApi = {
-    payment: orderModel.payment,  // Тип оплаты
-    email: orderModel.email,      // Электронная почта
-    phone: orderModel.phone,      // Телефон
-    address: orderModel.address,  // Адрес доставки
-    total: totalSum,         // Сумма заказа
-    items: basketModel.goods,      // Список товаров
-  };
-*/
-  //const contactsView = orderContacts.render(orderModel as Partial<IOrderView>);
-  //contentModal.replaceChildren(contactsView);
+        // ... и очистить корзину
+        basketModel.goods = null;
+        // ... и поблагодарить пользователя за заказ!
+        page.contentModal.replaceChildren(clonePageSuccess);
+      }
+    })
+    .catch(err => {
+      showError('Отправка заказа', err.message);
+    });
 });
-
-
-//events.on(settings.events.order.changeOrder,() => {
-
-//};
-// Что-то поменяли
-/*
-if (!isEmpty(data)) {
-  // Добавить товары из корзины
-  const order = this.basketModel;
-  if (this.order.showPage === 'order') {  // первая страница
-    this.order = new Order(cloneTemplate(Order.templatePageContacts), this.events);
-    const orderView = this.order.render(order as Partial<IOrderView>);
-    this.contentModal.replaceChildren(orderView);
-  } else if (this.order.showPage === 'contacts') {
-    const totalSum = this.basketModel.calcTotal();
-
-    // ... и отправить заказ
-
-    // переписать в новую структуру, а вдруг API измениться?
-    const orderSend: IOrderApi = {
-      payment: this.orderModel.payment,  // Тип оплаты
-      email: this.orderModel.email,      // Электронная почта
-      phone: this.orderModel.phone,      // Телефон
-      address: this.orderModel.address,  // Адрес доставки
-      total: totalSum,         // Сумма заказа
-      items: order.goods,      // Список товаров
-    };
-
-    this.api.sendOrder(orderSend)
-      .then(data => {
-        if (!isEmpty(data.error)) {  // Что-то пошло не так
-          showError('Отправка заказа', data.error);
-        } else {
-          this.order = new Order(cloneTemplate(Order.templatePageSuccess), this.events);
-          const orderView = this.order.render({
-            total: data.total,
-          });
-
-          // ... и сохранить параметры заказа без списка товаров
-          delete order.goods;
-          this.storage.saveOrder(order);
-          // ... и очистить корзину
-          this.basketModel.clear();
-          // ... и поблагодарить пользователя за заказ!
-          this.contentModal.replaceChildren(orderView);
-        }
-      })
-      .catch(err => {
-        showError('Отправка заказа', err.message);
-      });
-  }
-} else if (this.order.showPage === 'success') {  // Уже всё заказано
-  this.closeModal();
-}
-})*/
-

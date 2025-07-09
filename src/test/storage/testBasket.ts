@@ -13,9 +13,9 @@ export class StorageBasketTest extends Test {
 
   protected testData = {
     editDate: this.today,
-    goods: new Set<TIdGoodType>([
-      "854cef69-976d-4c2a-a18c-2aa45046c390",
-      "c101ab44-ed99-4a54-990d-47aa2bb4e7d9"
+    goods: new Map<TIdGoodType, number>([
+      ["854cef69-976d-4c2a-a18c-2aa45046c390", 1],
+      ["c101ab44-ed99-4a54-990d-47aa2bb4e7d9", 2],
     ]),
   };
 
