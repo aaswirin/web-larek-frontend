@@ -85,16 +85,25 @@ function rebuildBasket(): void {
         price: sum,
       });
   });
-  const basketView = new Basket(cloneBasketList, events).
-    render({
+
+  if (count === 0) {   // В корзине ничего нет
+    const basketView = new Basket(cloneBasketList, events).render({
+      basketEmpty : 'Корзина пуста',
+      totalSum: priceToString(settings.case.synapse, totalSum),
+    });
+
+    page.contentModal.replaceChildren(basketView);
+  } else {             // В корзине есть товары
+    const basketView = new Basket(cloneBasketList, events).render({
       basketList: goodsHTMLArray,
       totalSum: priceToString(settings.case.synapse, totalSum),
     });
 
-  page.contentModal.replaceChildren(basketView);
+    page.contentModal.replaceChildren(basketView);
+  }
 }
 
-// Загрузить карты из API
+// Загрузить товары из API
 apiLarek.getGoods()
   .then(data => {
     /* Переписать из API в свою структуру
@@ -111,19 +120,31 @@ apiLarek.getGoods()
       listGoods.set(good.id, good as TGood);
     })
     goodsModel.goods = listGoods;
+
+    // Теперь можно загрузить корзину из локального хранилища, если там чего-то есть
+    if (settings.storage.active) {
+      // Корзина
+      const basketStorage = storage.loadBasket();
+      if (!isEmpty(basketStorage)) {
+        basketModel.editDate = basketStorage.editDate;
+        // Проверить товары из корзины, А вдруг уже нет в каталоге?
+        const tempGoods = new Map<TIdGoodType, number>;
+        basketStorage.goods.forEach((count, id) => {
+          if (!isEmpty(goodsModel.getGood(id))) {
+            // Товар в каталоге есть! Можно оставить в корзине.
+            tempGoods.set(id, count);
+          }
+        });
+        basketModel.goods = tempGoods;
+      }
+    }
   })
   .catch(err => {
     showError('Загрузка товаров', err.message);
   });
 
-// Загрузить из локального хранилища, если там чего-то есть
+// Теперь можно загрузить параметры заказа из локального хранилища, если там чего-то есть
 if (settings.storage.active) {
-  // Корзина
-  const basketStorage = storage.loadBasket();
-  if (!isEmpty(basketStorage)) {
-    basketModel.editDate = basketStorage.editDate;
-    basketModel.goods = basketStorage.goods;
-  }
   // Параметры заказа
   const orderStorage = storage.loadOrder();
   if (!isEmpty(orderStorage)) {
@@ -225,12 +246,30 @@ events.on(settings.events.basket.goodDelete,(data: Partial<TGood>) => {
 
 // Сообщение -> Клик на кнопке "Оформить" в корзине
 events.on(settings.events.order.makeOrder,() => {
-  const orderView = orderPay.render({
+  const textError = orderModel.validation({
     payment: orderModel.payment,
     address: orderModel.address,
   });
+
+  const orderView = orderPay.render({
+    payment: orderModel.payment,
+    address: orderModel.address,
+    errorValidation: textError,
+  });
   page.contentModal.replaceChildren(orderView);
   page.showModal();
+});
+
+// Сообщение -> Изменение данных на первой странице
+events.on(settings.events.order.changeValueOrder,(data: Partial<IOrderView> ) => {
+  const textError = orderModel.validation(data);
+
+  console.log(textError);
+  const orderView = orderPay.render({
+    errorValidation: textError,
+  });
+
+  //page.contentModal.replaceChildren(orderView);
 });
 
 // Сообщение -> Клик на кнопке "Далее" в заказе
@@ -238,9 +277,15 @@ events.on(settings.events.order.changeOrder,(data: Partial<IOrderView> ) => {
   orderModel.address = data.address;
   orderModel.payment = data.payment;
 
+  const textError = orderModel.validation({
+    email: orderModel.email,
+    phone: orderModel.phone,
+  });
+
   const contactsView = orderContacts.render({
     email: orderModel.email,
     phone: orderModel.phone,
+    errorValidation: textError,
   });
 
   page.contentModal.replaceChildren(contactsView);

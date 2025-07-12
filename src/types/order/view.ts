@@ -11,4 +11,5 @@ export interface IOrderView {
   phone: string,
   total: number,
   goods: TPaymentType[],
+  errorValidation: string,
 }

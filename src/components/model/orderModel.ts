@@ -4,16 +4,19 @@
 
 import { IOrderModel, TPaymentType } from "../../types/order/model";
 import { IEvents } from "../base/events";
+import { settings } from "../../utils/constants";
+import {isEmpty} from "../../utils/utils";
 
 /**
  * Класс для заказа
  */
 export class OrderModel implements IOrderModel {
 
-  protected _payment: TPaymentType;    // тип оплаты
-  protected _email: string;            // почта
-  protected _phone: string;            // телефон
-  protected _address: string;          // адрес
+  // тип оплаты
+  protected _payment: TPaymentType = settings.elements.order.defaultPay as TPaymentType;
+  protected _email: string = '';          // почта
+  protected _phone: string = '';          // телефон
+  protected _address: string = '';        // адрес
 
   constructor(protected events: IEvents) {
     this.events = events;
@@ -74,5 +77,31 @@ export class OrderModel implements IOrderModel {
   get address() {
     return this._address;
   }
+  /**
+   * Геттер для адреса
+   */
+  validation(data: Partial<IOrderModel>):string {
+    let textError: string = '';
+    // Тип оплаты
+    if (!isEmpty(data.payment) && (data.payment as string === ''))
+      textError = textError + 'Необходимо указать тип оплаты. ';
+    // Адрес
+    console.log(data);
 
+    if (!isEmpty(data.address) && (data.address === ''))
+      textError = textError + 'Необходимо указать адрес. ';
+    // Почта
+    if (!isEmpty(data.email)) {
+      if (data.email === '') textError = textError + 'Необходимо указать Email. '
+      else if (settings.elements.order.patternEMail.test(data.email))
+        textError = textError + 'Укажите действующий Email. '
+    }
+    // Телефон
+    if (!isEmpty(data.phone)) {
+      if (data.phone === '') textError = textError + 'Необходимо указать телефон. '
+      else if (settings.elements.order.patternPhone.test(data.phone))
+        textError = textError + 'Укажите действующий телефон. '
+    }
+    return textError;
+  }
 }

@@ -13,7 +13,7 @@ export function priceToString(choice: Map<number, string>, value: number | null)
   let stringPrice: string;
 
   if (isEmpty(value)) {
-    stringPrice = choice.get(0);
+    stringPrice = `0 ${choice.get(3)}`;
   } else {
     stringPrice = value.toString();
     // Разбить на разряды

@@ -92,7 +92,9 @@ export class CardGood extends Component<IGoodView> {
    * Сеттер для номера цены
    */
   set price(value: number | null) {
-    this.setText(this.elementPrice, priceToString(settings.case.synapse, value));
+    // Если цены нет, то "Бесценно"
+    this.setText(this.elementPrice,
+                 isEmpty(value) ? settings.case.synapse.get(0) : priceToString(settings.case.synapse, value));
   }
 
   /**

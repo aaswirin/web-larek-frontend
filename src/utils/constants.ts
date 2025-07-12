@@ -51,7 +51,9 @@ export const settings = {
     // Заказ
     order: {
       makeOrder: 'order:make',                 // Событие "Сделать заказ"
+      changeValueOrder: 'order:changeValueOrder',         // Изменение данных на первой странице заказа
       changeOrder: 'order:changePay',          // Событие "Перейти на вторую страницу заказа"
+      changeValueContacts: 'order:changeValueContacts',   // Изменение данных на первой странице заказа
       changeContacts: 'order:changeContacts',  // Событие "Отправить заказ"
     },
     // Страница
@@ -114,16 +116,23 @@ export const settings = {
     order: {
       // Первая страница
       templatePageOrder: '#order',             // Страница для ввода Типа оплаты и Адреса
-      buttonClassActive: 'button_alt-active',  // Кнопка "Онлайн"
+      buttonClassActive: 'button_alt-active',  // Активность кнопок
+      defaultPay: 'offline',                   // Выбор по умолчанию типа оплаты
       buttonCard: '[name="card"]',             // Кнопка "Онлайн"
       buttonCash: '[name="cash"]',             // Кнопка "При получении"
       inputAddress: '[name="address"]',        // Поле ввода "Адрес"
       buttonOrder: '.order__button',           // Кнопка "Далее"
+      errorOrder: '.form__errors',             // Поле для вывода ошибок валидации
       // Вторая страница
       templatePageContacts: '#contacts',       // Страница для ввода Почты и Телефона
       inputEMail: '[name="email"]',            // Поле ввода "Почта"
+      // Шаблон для проверки почты
+      patternEMail: /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu,
       inputPhone: '[name="phone"]',            // Поле ввода "Телефон"
-      buttonContacts: '.contacts__button',          // Кнопка "Оплатить"
+      // Шаблон для проверки телефона
+      patternPhone: /(?:\+|\d)[\d\-\(\) ]{9,}\d/g,
+      buttonContacts: '.contacts__button',     // Кнопка "Оплатить"
+      errorContacts: '.form__errors',          // Поле для вывода ошибок валидации
       // Третья страница
       templatePageSuccess: '#success',         // Заключительная страница
       totalSum: '.order-success__description', // Сумма заказа

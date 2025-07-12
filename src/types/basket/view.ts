@@ -17,6 +17,7 @@
  */
 interface IBasketView {
   basketList: HTMLElement[];
+  basketEmpty: string;
   startDate: Date;
   totalSum: string;
 }
