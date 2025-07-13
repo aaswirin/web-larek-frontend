@@ -55,6 +55,7 @@ const goodsModel = new GoodsModel(events);             // Список това�
 const basketModel = new BasketModel(events);           // Корзина
 const orderModel = new OrderModel(events);             // Параметры заказа
 // Отображения
+const basketView = new Basket(cloneBasketList, events);                  // Отображение корзины
 const orderPay = new OrderViewPay(clonePageOrder, events);               // Первая страница заказа
 const orderContacts = new OrderViewContacts(clonePageContacts, events);  // Вторая страница заказа
 
@@ -87,19 +88,19 @@ function rebuildBasket(): void {
   });
 
   if (count === 0) {   // В корзине ничего нет
-    const basketView = new Basket(cloneBasketList, events).render({
+    const basket = basketView.render({
       basketEmpty : 'Корзина пуста',
       totalSum: priceToString(settings.case.synapse, totalSum),
     });
 
-    page.contentModal.replaceChildren(basketView);
+    page.contentModal.replaceChildren(basket);
   } else {             // В корзине есть товары
-    const basketView = new Basket(cloneBasketList, events).render({
+    const basket = basketView.render({
       basketList: goodsHTMLArray,
       totalSum: priceToString(settings.case.synapse, totalSum),
     });
 
-    page.contentModal.replaceChildren(basketView);
+    page.contentModal.replaceChildren(basket);
   }
 }
 
@@ -260,16 +261,22 @@ events.on(settings.events.order.makeOrder,() => {
   page.showModal();
 });
 
-// Сообщение -> Изменение данных на первой странице
+// Сообщение -> Изменение данных на первой странице заказа
 events.on(settings.events.order.changeValueOrder,(data: Partial<IOrderView> ) => {
   const textError = orderModel.validation(data);
 
-  console.log(textError);
-  const orderView = orderPay.render({
+  orderPay.render({
     errorValidation: textError,
   });
+});
 
-  //page.contentModal.replaceChildren(orderView);
+// Сообщение -> Изменение данных на второй странице заказа
+events.on(settings.events.order.changeValueContacts,(data: Partial<IOrderView> ) => {
+  const textError = orderModel.validation(data);
+
+  orderContacts.render({
+    errorValidation: textError,
+  });
 });
 
 // Сообщение -> Клик на кнопке "Далее" в заказе

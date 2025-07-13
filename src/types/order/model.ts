@@ -15,4 +15,5 @@ export interface IOrderModel {
   address: string;         // адрес
   email: string;           // почта
   phone: string;           // телефон
+  validation(data: Partial<IOrderModel>):string;  // Проверка введённых данных
 }

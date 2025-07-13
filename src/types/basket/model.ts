@@ -3,7 +3,7 @@
  */
 
 import { TIdGoodType } from "../index";
-import { IGoodsModel, TGood } from "../good/model";
+import { IGoodsModel } from "../good/model";
 
 /**
  * Интерфейс для корзины

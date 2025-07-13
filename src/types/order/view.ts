@@ -2,7 +2,7 @@
  * Типы и интерфейсы для отображения "Заказ"
  */
 
-import {TPaymentType} from "./model";
+import { TPaymentType } from "./model";
 
 export interface IOrderView {
   payment: TPaymentType,

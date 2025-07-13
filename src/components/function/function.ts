@@ -3,6 +3,7 @@
  */
 
 import { isEmpty } from "../../utils/utils";
+import {settings} from "../../utils/constants";
 
 /**
  * Падежометр для чисел прописью в синапсах, штуках и т.д.
@@ -17,7 +18,7 @@ export function priceToString(choice: Map<number, string>, value: number | null)
   } else {
     stringPrice = value.toString();
     // Разбить на разряды
-    stringPrice = stringPrice.replace(/(\d)(?=(\d{3})+([^\d]|$))/g, "$1 ");
+    stringPrice = stringPrice.replace(settings.case.splitNumber, "$1 ");
 
     // Падежометр
     const remains:number = value % 10;

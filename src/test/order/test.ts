@@ -3,12 +3,12 @@
  */
 
 import { Test } from "../abstract/test";
-import { IOrderModel } from "../../types/order/model";
 import { OrderModel } from "../../components/model/orderModel";
-import {EventEmitter} from "../../components/base/events";
+import { EventEmitter } from "../../components/base/events";
+import { TPaymentType } from "../../types/order/model";
 
 export class OrderTest extends Test {
-  protected testData: IOrderModel = {
+  protected testData = {
     payment: "offline",
     email: 'boss@grandfather.ru',
     phone: '+71234567890',
@@ -21,12 +21,12 @@ export class OrderTest extends Test {
 
       // 1. Создание и последующее чтение
       const objOrder = new OrderModel(events);
-      objOrder.payment = this.testData.payment;
+      objOrder.payment = this.testData.payment as TPaymentType;
       objOrder.email = this.testData.email;
       objOrder.phone = this.testData.phone;
       objOrder.address = this.testData.address;
 
-      let data: IOrderModel = {
+      let data = {
         payment: objOrder.payment,
         email: objOrder.email,
         phone: objOrder.phone,

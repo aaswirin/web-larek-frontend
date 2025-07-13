@@ -9,16 +9,17 @@ import { settings } from "../../utils/constants";
 interface IPage {
   goodsList: HTMLElement[];
   basketCount: number;
+  displayedModal: boolean;
   showModal(): void;
   closeModal(): void;
+  closeWindowKey(event: KeyboardEvent):void;
 }
-
 
 export class Page extends Component<IPage> {
 
   protected galleryCards: HTMLElement;
   protected elementBasketCount: HTMLElement;
-  public displayedModal = false;                    // Признак активности модального окна
+  public displayedModal: boolean = false;                    // Признак активности модального окна
   public windowModal: HTMLElement;
   public contentModal: HTMLElement;
 

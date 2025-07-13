@@ -8,7 +8,7 @@ import { IOrderModel } from "../../types/order/model";
 import { isEmpty } from "../../utils/utils";
 
 export class StorageOrderTest extends Test {
-  protected testData: IOrderModel  = {
+  protected testData  = {
     payment: 'offline',
     email: 'boss@grandfather.ru',
     phone: '+71234567890',
@@ -18,11 +18,11 @@ export class StorageOrderTest extends Test {
   test() {
     const storage = new LarekStorage();
     // Предохранить что было в хранилище
-    const oldOrder: IOrderModel = storage.loadOrder();
+    const oldOrder = storage.loadOrder();
 
     try {
       // 1. Запись и последующее чтение
-      storage.saveOrder(this.testData);
+      storage.saveOrder(this.testData as IOrderModel);
       const data: IOrderModel = storage.loadOrder();
 
       if (!this.compareResult(data)) {

@@ -54,10 +54,6 @@ export class OrderViewPay extends Component<IOrderView> {
 
   }
 
-  set content(content: HTMLElement) {
-    this.container.replaceChildren(content);
-  }
-
   set payment(value: TPaymentType) {
     if (isEmpty(value)) return;
 
@@ -81,7 +77,6 @@ export class OrderViewPay extends Component<IOrderView> {
    * Изменение данных на форме
    */
   changeData() {
-    console.log(this.inputAddress.value);
     this.events.emit(settings.events.order.changeValueOrder, {
       payment: this.buttonCard.classList.contains(settings.elements.order.buttonClassActive),
       address: this.inputAddress.value,

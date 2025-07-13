@@ -3,27 +3,18 @@
  */
 
 /**
- * Интерфейс для результатов теста
- *
- * @view IResult
- *  @property {number | null} code Код ошибки
- *  @property {string} message Сообщение ошибки
+ * Тип для результатов теста
  */
-export interface IResult {
+export type TResult = {
   code: number | null;
   message: string;
 }
 /**
  * Класс для тестов
- *
- * @class Test
- *   @property {string} name Имя теста
- *   @property {IResult} result Результат теста
- *   @property {Object} testData Тестовые данные
  */
 export abstract class Test {
   protected name: string;
-  protected result: IResult;
+  protected result: TResult;
   protected testData: Object;
 
   /**
@@ -51,7 +42,7 @@ export abstract class Test {
    *
    * @method getResult
    */
-  getResult(): IResult {
+  getResult(): TResult {
     return this.result;
   }
 

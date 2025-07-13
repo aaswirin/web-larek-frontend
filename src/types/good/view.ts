@@ -2,7 +2,6 @@
  * Типы и интерфейсы для отображения "Товар"
  */
 
-
 import { TCategoryType, TIdGoodType } from "../index";
 
 /**

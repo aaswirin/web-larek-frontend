@@ -77,8 +77,9 @@ export class OrderModel implements IOrderModel {
   get address() {
     return this._address;
   }
+
   /**
-   * Геттер для адреса
+   * Проверка введённых данных
    */
   validation(data: Partial<IOrderModel>):string {
     let textError: string = '';
@@ -86,20 +87,18 @@ export class OrderModel implements IOrderModel {
     if (!isEmpty(data.payment) && (data.payment as string === ''))
       textError = textError + 'Необходимо указать тип оплаты. ';
     // Адрес
-    console.log(data);
-
     if (!isEmpty(data.address) && (data.address === ''))
       textError = textError + 'Необходимо указать адрес. ';
     // Почта
     if (!isEmpty(data.email)) {
       if (data.email === '') textError = textError + 'Необходимо указать Email. '
-      else if (settings.elements.order.patternEMail.test(data.email))
+      else if (!settings.elements.order.patternEMail.test(data.email))
         textError = textError + 'Укажите действующий Email. '
     }
     // Телефон
     if (!isEmpty(data.phone)) {
       if (data.phone === '') textError = textError + 'Необходимо указать телефон. '
-      else if (settings.elements.order.patternPhone.test(data.phone))
+      else if (!settings.elements.order.patternPhone.test(data.phone))
         textError = textError + 'Укажите действующий телефон. '
     }
     return textError;

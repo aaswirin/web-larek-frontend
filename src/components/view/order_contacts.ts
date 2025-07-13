@@ -34,12 +34,13 @@ export class OrderViewContacts extends Component<IOrderView> {
         email: this.inputEMail.value,
         phone: this.inputPhone.value,
       });
-
     });
-  }
 
-  set content(content: HTMLElement) {
-    this.container.replaceChildren(content);
+    // Изменение данных
+    const func = this.changeData.bind(this);
+    this.inputEMail.addEventListener('input', func);
+    this.inputPhone.addEventListener('input', func);
+
   }
 
   set email(value: string) {
@@ -54,6 +55,16 @@ export class OrderViewContacts extends Component<IOrderView> {
     this.setText(this.errorContacts, value);
 
     this.setDisabled(this.buttonPay, value !== '');
+  }
+
+  /**
+   * Изменение данных на форме
+   */
+  changeData() {
+    this.events.emit(settings.events.order.changeValueContacts, {
+      email: this.inputEMail.value,
+      phone: this.inputPhone.value,
+    })
   }
 
 }
