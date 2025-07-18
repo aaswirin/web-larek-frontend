@@ -71,6 +71,7 @@ yarn build
 - `settings.events.basket` - сообщения корзины
 - `settings.events.order` - сообщения заказа
 - `settings.events.page` - сообщения страницы приложения
+- `settings.events.modal` - сообщения модального окна
 
 Описание списка сообщений см. ["Описание сообщений между слоями приложения"](#message_list)
 
@@ -91,6 +92,7 @@ settings.keysClose: [
 - `settings.elements.card` - элементы вёрстки для [карты товара](#view_card)
 - `settings.elements.basket` - элементы вёрстки для [корзины](#view_basket)
 - `settings.elements.order` - элементы вёрстки для [заказа](#view_order)
+- `settings.elements.modal` - элементы вёрстки для [модального окна](#view_modal)
 
 #### Настройки для чисел прописью
 - `settings.case` - описание склонений значений
@@ -108,6 +110,15 @@ settings.keysClose: [
 #### Класс содержит:
 - метод`on<T extends object>(eventName: EventName, callback: (event: T) => void)` - устанавливает обработчик на событие
 - метод`emit<T extends object>(eventName: string, data?: T)` - инициировать событие с данными
+### Modal<a id="#view_modal"></a>
+Класс реализует модальные окна в приложении.\
+См. `src/components/base/modal.ts`
+#### Класс содержит:
+- свойство `content: HTMLElement;` - контент модального окна
+- конструктор `constructor(container: HTMLElement, protected events: IEvents)`
+- метод `open()` - показать модальное окно
+- метод `close()` - скрыть модальное окно
+- метод `render(data: IModalData): HTMLElement` - обновить контент модального окна
 ## Описание данных
 ### Описание сообщений между слоями приложения<a id="message_list"></a>
 - `goods:allChange` - событие "Изменён список товаров"
@@ -121,7 +132,8 @@ settings.keysClose: [
 - `order:changePay` - событие "Перейти на вторую страницу заказа"
 - `order:changeValueContacts` - событие "Изменение данных на первой странице заказа"
 - `order:changeContacts` - событие "Отправить заказ"
-
+- `order:sendedOrder` - событие "Заказ отправлен"
+- `order:closeOrder` - событие "Закрыть окно заказа"
 ### Слой "Модель данных":
 ### Типы:
 ### TCategoryType
@@ -148,9 +160,9 @@ type TPaymentType = 'offline' | 'online';
 Описывает тип данных "Товар".\
 См. `src/types/good/model.ts`
 - `id: TIdGoodType` - id
-- `description: string;` - описание
 - `image: string;` - URL картинки
 - `title: string;` - наименование
+- `description: string;` - описание
 - `category: TCategoryType;` - категория
 - `price: number | null;` - цена, может быть null
 - `number?:  number;` - порядковый номер в корзине
@@ -179,6 +191,7 @@ TListGoods = Map<TIdGoodType, TGood>;
 - `getCount(): number;` - количество товаров в корзине
 - `isBasket(id: TIdGoodType): boolean;` - проверить наличие товара в корзине
 - `calcTotal(Goods: IGoodsModel): number;` - посчитать сумму товаров в корзине
+- `calcGood(Good: TGood): number;` - посчитать стоимость одного товара в корзине (цена * количество)
 ### IOrderModel<a id="interface_order"></a>
 Описывает интерфейс модели ["Заказ"](#model_order).\
 См. `src/types/order/model.ts`
@@ -215,6 +228,7 @@ TListGoods = Map<TIdGoodType, TGood>;
 - метод `getCount(): number;` - количество товаров в корзине
 - метод `isBasket(id: TIdGoodType): boolean;` - проверить наличие товара в корзине
 - метод `calcTotal(Goods: IGoodsModel): number;` - посчитать сумму товаров в корзине
+- метод `calcGood(Good: TGood): number;` - посчитать стоимость одного товара в корзине (цена * количество)
 ### OrderModel<a id="model_order"></a>
 Реализует интерфейс [IOrderModel](#interface_order)\
 См. `src/components/model/orderModel.ts`\
@@ -232,9 +246,9 @@ TListGoods = Map<TIdGoodType, TGood>;
 Тип товара из API.\
 См. `src/types/api/index.ts`
 - `id: TIdGoodType` - id товара
-- `description: string` - описание
 - `image: string` - изображение
 - `title: string` - название
+- `description: string` - описание
 - `category: string` - категория
 - `price: number | null` - цена
 ### TListGoodsApi
@@ -277,8 +291,10 @@ TListGoods = Map<TIdGoodType, TGood>;
 Описывает карту товара для отображения.\
 См. `src/types/good/view.ts`
 #### Интерфейс содержит:
+- `'number?: number;` - номер товара в корзине
 - `category: string` - категория товара
 - `title: string` - наименование товара
+- `description: string` - описание товара
 - `image: string` - изображение товара
 - `price: number | null` - цена товара
 - `id: TIdGoodType` - id товара
@@ -308,10 +324,6 @@ TListGoods = Map<TIdGoodType, TGood>;
 #### Интерфейс содержит:
 - `goodsList: HTMLElement[]` - список элементов карт товара на странице
 - `basketCount: number` - количество товаров в корзине
-- `displayedModal: boolean;` - признак активности модального окна
-- `showModal(): void;` - показать модальное окно
-- `closeModal(): void;` - закрыть модальное окно
-- `closeWindowKey(event: KeyboardEvent):void;` - закрытие окна по клавише
 ### Классы
 ### CardGood<a id="view_card"></a>
 Класс для отображения карты товара в каталоге, детальном просмотре и корзине.\
@@ -353,16 +365,18 @@ TListGoods = Map<TIdGoodType, TGood>;
 - свойство `errorValidation` - ошибка проверки введённых данных
 - метод `changeData(): void` - Изменение данных на форме
 - конструктор `constructor(container: HTMLElement, protected events: EventEmitter)`
+### OrderViewSuccess
+Класс для отображения третьей страницы отображения заказа.\
+См. `src/components/view/order_success.ts`
+#### Класс содержит:
+- свойство `total: number` - сколько списано
+- конструктор `constructor(container: HTMLElement, protected events: EventEmitter)`
 ### Page<a id="view_page"></a>
 Класс для отображения страницы приложения.\
 См. `src/components/view/page.ts`
 #### Класс содержит:
 - свойство `goodsList: HTMLElement[]` - список элементов карт товара на странице
 - свойство `basketCount: number` - количество товаров в корзине
-- свойство `displayedModal: boolean;` - признак активности модального окна
-- метод `showModal(): void;` - показать модальное окно
-- метод `closeModal(): void;` - закрыть модальное окно
-- метод `closeWindowKey(event: KeyboardEvent):void;` - закрытие окна по клавише
 - конструктор `constructor(container: HTMLElement, protected events: EventEmitter)`
 ### Подсистема "Хранилище"
 ### Классы

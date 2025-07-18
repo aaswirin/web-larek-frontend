@@ -8,9 +8,10 @@ import { TCategoryType, TIdGoodType } from "../index";
  * Интерфейс для отображения "Товар"
  */
 export interface IGoodView {
-  number: number;
+  number?: number;
   category: TCategoryType;
   title: string;
+  description: string;
   image: string;
   price: number | null;
   id: TIdGoodType;

@@ -7,7 +7,7 @@ import { isEmpty } from "../../utils/utils";
 import { IEvents } from "../base/events";
 import { settings } from "../../utils/constants";
 import { TIdGoodType } from "../../types";
-import { IGoodsModel } from "../../types/good/model";
+import {IGoodsModel, TGood} from "../../types/good/model";
 
 /**
  * Класс для корзины
@@ -110,10 +110,18 @@ export class BasketModel implements IBasketModel {
   calcTotal(Goods: IGoodsModel): number {
     let total = 0;
     this._goods.forEach((value, key) => {
-        total += Goods.getGood(key).price * value;
+        total += this.calcGood(Goods.getGood(key));
       }
     )
     return total;
+  }
+
+  /**
+   * Посчитать стоимость одного товара в корзине
+   */
+  calcGood(Good: TGood): number {
+    // Цена * Количество
+    return Good.price * this._goods.get(Good.id);
   }
 
 }

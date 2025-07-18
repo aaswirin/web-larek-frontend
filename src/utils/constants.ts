@@ -37,6 +37,11 @@ export const settings = {
   },
   // События
   events: {
+    // Модальное окно
+    modal: {
+      open: 'modal:open',
+      close: 'modal:close',
+    },
     // Карта товара
     card: {
       goodsAllChange: 'goods:allChange',       // Событие "Изменён весь список товаров"
@@ -50,11 +55,13 @@ export const settings = {
     },
     // Заказ
     order: {
-      makeOrder: 'order:make',                 // Событие "Сделать заказ"
+      makeOrder: 'order:make',                            // Событие "Сделать заказ"
       changeValueOrder: 'order:changeValueOrder',         // Изменение данных на первой странице заказа
-      changeOrder: 'order:changePay',          // Событие "Перейти на вторую страницу заказа"
+      changeOrder: 'order:changePay',                     // Событие "Перейти на вторую страницу заказа"
       changeValueContacts: 'order:changeValueContacts',   // Изменение данных на первой странице заказа
-      changeContacts: 'order:changeContacts',  // Событие "Отправить заказ"
+      changeContacts: 'order:changeContacts',             // Событие "Отправить заказ"
+      sendedOrder: 'order:sendedOrder',                   // Событие "Заказ отправлен"
+      closeOrder: 'order:closeOrder',                     // Событие "Закрыть окно заказа"
     },
     // Страница
     page: {
@@ -63,7 +70,7 @@ export const settings = {
   },
   keysClose: [                                 // Список клавиш, по которым закрываем окно. Вдруг поменяется?
     'Escape',
-    //'F10',
+    'F10',
   ],
   storage: {
     active: true,                              // Сохранять ли в локальное хранилище?
@@ -94,7 +101,8 @@ export const settings = {
       buttonDelete: '.basket__item-delete',    // Кнопка "Удалить" в корзине
       number: '.basket__item-index',           // Номер в корзине
       category: '.card__category',             // Категория
-      title: '.card__title',                   // Заголовок
+      title: '.card__title',                   // Название
+      description: '.card__text',              // Описание
       image: '.card__image',                   // Картинка
       price: '.card__price',                   // Цена
       catClass : new Map([                     // Классы для разных категорий

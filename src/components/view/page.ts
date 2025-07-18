@@ -5,13 +5,12 @@
 import { ensureElement }  from "../../utils/utils";
 import { Component } from "../base/component";
 import { settings } from "../../utils/constants";
+import { IEvents } from "../base/events";
 
 interface IPage {
   goodsList: HTMLElement[];
   basketCount: number;
   displayedModal: boolean;
-  showModal(): void;
-  closeModal(): void;
   closeWindowKey(event: KeyboardEvent):void;
 }
 
@@ -19,18 +18,19 @@ export class Page extends Component<IPage> {
 
   protected galleryCards: HTMLElement;
   protected elementBasketCount: HTMLElement;
-  public displayedModal: boolean = false;                    // Признак активности модального окна
-  public windowModal: HTMLElement;
-  public contentModal: HTMLElement;
+  protected elementBasketButton: HTMLButtonElement;
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, protected events: IEvents) {
     super(container);
 
     this.galleryCards = ensureElement(settings.elements.page.listGoods, this.container) as HTMLElement;
     this.elementBasketCount = ensureElement(settings.elements.page.basketCount, this.container) as HTMLElement;
-    // Модальное окно
-    this.windowModal = ensureElement<HTMLElement>(settings.elements.modal.modalContainer);
-    this.contentModal = ensureElement<HTMLElement>(settings.elements.modal.modalContent, this.windowModal);
+    this.elementBasketButton = ensureElement(settings.elements.page.basketButton) as HTMLButtonElement;
+
+    // Слушатели
+    this.elementBasketButton.addEventListener('click', () =>
+        events.emit(settings.events.page.showBasket));
+
   }
 
   set goodsList(itemsGoods: HTMLElement[]){
@@ -39,47 +39,6 @@ export class Page extends Component<IPage> {
 
   set basketCount(value: number) {
     this.setText(this.elementBasketCount, value.toString());
-  }
-
-  /**
-   *  Показать модальное окно
-   */
-  showModal() {
-    if (this.displayedModal) return;
-
-    this.displayedModal = true;
-    this.windowModal.classList.add(settings.elements.modal.modalActive);
-
-    // Для снятия открытого окна по клавише
-    const func = this.closeWindowKey.bind(this);
-    document.addEventListener('keydown', func);
-  }
-
-  /**
-   *  Скрыть модальное окно
-   */
-  closeModal() {
-    if (!this.displayedModal) return;
-
-    this.displayedModal = false;
-    this.windowModal.classList.remove(settings.elements.modal.modalActive);
-    this.contentModal.replaceChildren('');
-
-    // Для снятия открытого окна по клавише
-    const func = this.closeWindowKey.bind(this);
-    document.removeEventListener('keydown', func);
-  }
-
-  /**
-   * Закрывашка для всех окон по клавише
-   */
-  closeWindowKey(event: KeyboardEvent) {
-    // Поискать клавишу в списке
-    if (!(settings.keysClose.findIndex(function (element) {
-      return element === event.key;
-    }) !== -1)) return;
-
-    this.closeModal();
   }
 
 }

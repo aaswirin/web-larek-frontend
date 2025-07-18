@@ -21,6 +21,8 @@ import { Basket } from "./components/view/basket";
 import { OrderViewPay } from "./components/view/order_pay";
 import { OrderViewContacts } from './components/view/order_contacts';
 import { IOrderView } from "./types/order/view";
+import { Modal } from "./components/base/modal";
+import {OrderViewSuccess} from "./components/view/order_success";
 
 /*
 // Тесты
@@ -30,6 +32,8 @@ throw '';
 */
 
 // Заготовки
+// Модальное окно
+const elementModal = ensureElement<HTMLTemplateElement>(settings.elements.modal.modalContainer);
 // Под карту
 // 1. В каталоге
 const templateCatalog = ensureElement<HTMLTemplateElement>(settings.elements.card.templateCatalog);
@@ -55,53 +59,54 @@ const goodsModel = new GoodsModel(events);             // Список това�
 const basketModel = new BasketModel(events);           // Корзина
 const orderModel = new OrderModel(events);             // Параметры заказа
 // Отображения
+const modalWindow = new Modal(elementModal, events, settings.elements.modal, settings.keysClose);  // Модальное окно
 const basketView = new Basket(cloneBasketList, events);                  // Отображение корзины
 const orderPay = new OrderViewPay(clonePageOrder, events);               // Первая страница заказа
 const orderContacts = new OrderViewContacts(clonePageContacts, events);  // Вторая страница заказа
+const orderSuccess = new OrderViewSuccess(clonePageSuccess, events);    // Третья страница заказа
 
 // Страница
-const page = new Page(ensureElement(settings.elements.page.pageContent) as HTMLElement);
+const page = new Page(ensureElement(settings.elements.page.pageContent) as HTMLElement, events);
 
 // Функции
 /**
  * Перестроить корзину
  */
-function rebuildBasket(): void {
+function rebuildBasket(): HTMLElement {
   let count: number = 0;
-  let totalSum: number = 0;
 
   const goodsHTMLArray = Array.from(basketModel.goods).map(item => {
     const good = goodsModel.getGood(item[0]);
     const countInBasket = item[1];  // Количество в корзине
-    const sum = good.price * countInBasket;
-    count++;
 
-    totalSum = totalSum + sum; // Цена на количество
+    count++;
     return new CardGood(cloneTemplate(templateBasket), events)
       .render({
         number: count,
         id: good.id,
         // Название (сколько штук)
         title: `${good.title} (${priceToString(settings.case.piece, countInBasket)})`,
-        price: sum,
+        price: basketModel.calcGood(good),
       });
   });
 
+  let basket: HTMLElement;
   if (count === 0) {   // В корзине ничего нет
-    const basket = basketView.render({
+    basket = basketView.render({
       basketEmpty : 'Корзина пуста',
-      totalSum: priceToString(settings.case.synapse, totalSum),
+      totalSum: priceToString(settings.case.synapse, 0),
     });
 
-    page.contentModal.replaceChildren(basket);
+    //page.contentModal.replaceChildren(basket);
   } else {             // В корзине есть товары
-    const basket = basketView.render({
+    basket = basketView.render({
       basketList: goodsHTMLArray,
-      totalSum: priceToString(settings.case.synapse, totalSum),
+      totalSum: priceToString(settings.case.synapse, basketModel.calcTotal(goodsModel)),
     });
 
-    page.contentModal.replaceChildren(basket);
+    //page.contentModal.replaceChildren(basket);
   }
+  return basket;
 }
 
 // Загрузить товары из API
@@ -156,25 +161,6 @@ if (settings.storage.active) {
   }
 }
 
-// Слушатели
-// Для модального окна, кнопка закрытия
-ensureElement(settings.elements.modal.closeButton, page.windowModal).addEventListener('click', () =>
-  page.closeModal());
-
-// Показ корзины
-ensureElement(settings.elements.page.basketButton).addEventListener('click', () =>
-  events.emit(settings.events.page.showBasket));
-
-// События
-// Кнопка "За новыми покупками"
-ensureElement(settings.elements.order.buttonSuccess, clonePageSuccess).addEventListener('click', () =>
-  page.closeModal());
-
-// Для снятия открытого окна по клику вне окна
-page.windowModal.addEventListener('mouseup', (event: MouseEvent) => {
-  if ((event.target as HTMLElement).closest(settings.elements.modal.modalContent) === null) page.closeModal();
-});
-
 // Обработка сообщений
 // Сообщение -> Изменение списка товаров в каталоге
 events.on(settings.events.card.goodsAllChange, () => {
@@ -200,10 +186,10 @@ events.on(settings.events.card.cardDetail, (data: Partial<TGood>) => {
     disabledButton = true;
   }
 
-  const card=  new CardGood(cloneTemplate(templateDetails), events)
-    .render({...good, buttonText: captionButton, buttonDisabled: disabledButton});
-  page.contentModal.replaceChildren(card);
-  page.showModal();
+  modalWindow.render({
+    content: new CardGood(cloneTemplate(templateDetails), events)
+                 .render({...good, buttonText: captionButton, buttonDisabled: disabledButton}),
+  });
 });
 
 // Сообщение -> Клик на кнопке в карте товара "Добавить в корзину"
@@ -234,15 +220,18 @@ events.on(settings.events.basket.changeBasket,  () => {
 
 // Сообщение -> Клик на кнопке "Покажи мне корзину"
 events.on(settings.events.page.showBasket,() => {
-  // Показ корзины
-  rebuildBasket();
-  page.showModal();
+  modalWindow.render({
+    content: rebuildBasket(),
+  });
 });
 
 // Сообщение -> Клик на кнопке "Удалить" в корзине
 events.on(settings.events.basket.goodDelete,(data: Partial<TGood>) => {
   basketModel.deleteGood(data.id);
-  rebuildBasket();
+
+  modalWindow.render({
+    content: rebuildBasket(),
+  });
 });
 
 // Сообщение -> Клик на кнопке "Оформить" в корзине
@@ -252,13 +241,13 @@ events.on(settings.events.order.makeOrder,() => {
     address: orderModel.address,
   });
 
-  const orderView = orderPay.render({
-    payment: orderModel.payment,
-    address: orderModel.address,
-    errorValidation: textError,
+  modalWindow.render({
+    content: orderPay.render({
+                payment: orderModel.payment,
+                address: orderModel.address,
+                errorValidation: textError,
+              }),
   });
-  page.contentModal.replaceChildren(orderView);
-  page.showModal();
 });
 
 // Сообщение -> Изменение данных на первой странице заказа
@@ -289,18 +278,17 @@ events.on(settings.events.order.changeOrder,(data: Partial<IOrderView> ) => {
     phone: orderModel.phone,
   });
 
-  const contactsView = orderContacts.render({
-    email: orderModel.email,
-    phone: orderModel.phone,
-    errorValidation: textError,
+  modalWindow.render({
+    content: orderContacts.render({
+                email: orderModel.email,
+                phone: orderModel.phone,
+                errorValidation: textError,
+             }),
   });
-
-  page.contentModal.replaceChildren(contactsView);
 });
 
 // Сообщение -> Клик на кнопке "Оплатить" в заказе
-events.on(settings.events.order.changeContacts,(data: Partial<IOrderView> ) => {
-  console.log(settings.events.order.changeContacts);
+events.on(settings.events.order.changeContacts,(data: Partial<IOrderView>) => {
   orderModel.email = data.email;
   orderModel.phone = data.phone;
 
@@ -341,16 +329,28 @@ events.on(settings.events.order.changeContacts,(data: Partial<IOrderView> ) => {
       if (!isEmpty(data.error)) {  // Что-то пошло не так
         showError('Отправка заказа', data.error);
       } else {
-        ensureElement(settings.elements.order.totalSum, clonePageSuccess).textContent =
-          `Списано ${priceToString(settings.case.synapse, data.total)}`;
-
-        // ... и очистить корзину
-        basketModel.goods = null;
-        // ... и поблагодарить пользователя за заказ!
-        page.contentModal.replaceChildren(clonePageSuccess);
+        events.emit(settings.events.order.sendedOrder, {total: data.total});
       }
     })
     .catch(err => {
       showError('Отправка заказа', err.message);
     });
 });
+
+// Сообщение -> Заказ отправлен
+events.on(settings.events.order.sendedOrder, (data: Partial<IOrderView>  ) => {
+  // ... и очистить корзину
+  basketModel.goods = null;
+  // ... и поблагодарить пользователя за заказ!
+  modalWindow.render({
+    content: orderSuccess.render({
+      total: data.total,
+    }),
+  });
+});
+
+// Сообщение -> Закрыть окно заказа
+events.on(settings.events.order.closeOrder, () => {
+  modalWindow.close();
+});
+

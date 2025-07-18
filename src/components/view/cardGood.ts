@@ -16,7 +16,8 @@ import { priceToString } from "../function/function";
 export class CardGood extends Component<IGoodView> {
   protected elementNumber: HTMLElement;               // Номер
   protected elementCategory: HTMLElement;             // Категория
-  protected elementTitle: HTMLElement;                // Заголовок
+  protected elementTitle: HTMLElement;                // Название
+  protected elementDescription: HTMLElement;          // Название
   protected elementImage: HTMLImageElement;           // Картинка
   protected elementPrice: HTMLElement;                // Цена
   protected basketButton: HTMLButtonElement;          // Кнопка "В корзину", если карта товара в детальном просмотре
@@ -30,6 +31,7 @@ export class CardGood extends Component<IGoodView> {
     this.elementImage = container.querySelector(settings.elements.card.image) as HTMLImageElement;
     this.elementNumber = container.querySelector(settings.elements.card.number) as HTMLElement;
     this.elementTitle = ensureElement(settings.elements.card.title, this.container) as HTMLElement;
+    this.elementDescription = container.querySelector(settings.elements.card.description) as HTMLElement;
     this.elementPrice = ensureElement(settings.elements.card.price, this.container) as HTMLElement;
     this.basketButton = container.querySelector(settings.elements.modal.basketButton) as HTMLButtonElement;
     this.basketDelete = container.querySelector(settings.elements.card.buttonDelete) as HTMLButtonElement;
@@ -50,6 +52,13 @@ export class CardGood extends Component<IGoodView> {
       this.basketDelete.addEventListener('click', () =>
         this.events.emit(settings.events.basket.goodDelete, {id: this.goodId}));
     }
+  }
+
+  /**
+   * Сеттер для номера карты
+   */
+  set number(value: number) {
+    this.setText(this.elementNumber, value);
   }
 
   /**
@@ -79,6 +88,20 @@ export class CardGood extends Component<IGoodView> {
    */
   get title() {
     return this.elementTitle.textContent;
+  }
+
+  /**
+   * Сеттер для описания
+   */
+  set description(value: string) {
+    this.setText(this.elementDescription, value);
+  }
+
+  /**
+   * Геттер для названия
+   */
+  get description() {
+    return this.elementDescription.textContent;
   }
 
   /**

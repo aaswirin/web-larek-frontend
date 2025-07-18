@@ -3,7 +3,7 @@
  */
 
 import { TIdGoodType } from "../index";
-import { IGoodsModel } from "../good/model";
+import { IGoodsModel, TGood } from "../good/model";
 
 /**
  * Интерфейс для корзины
@@ -16,4 +16,5 @@ export interface IBasketModel {
   getCount(): number;
   isBasket(id: TIdGoodType): boolean;
   calcTotal(Goods: IGoodsModel): number;
+  calcGood(Good: TGood): number;
 }
