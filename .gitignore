@@ -1,7 +1,6 @@
 node_modules
 dist
 doc
-.env
 .yarn
 .idea
 .vscode
